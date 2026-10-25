@@ -1,0 +1,11 @@
+.demo{border:1px solid var(--line);margin:16px 0}
+.demo-title{border-bottom:1px solid var(--line);padding:8px 12px;font-size:13px;font-weight:500}
+.controls{padding:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.controls label{display:flex;align-items:center;gap:8px;font:12px var(--mono)}
+.controls>span{font:11px var(--mono);margin-left:auto}
+.stage-buttons{display:flex;gap:4px;flex-wrap:wrap;padding:8px 12px;border-bottom:1px solid var(--line)}
+.stage-buttons button{font-size:11px}
+#runtime-state,#batch-state{padding:0 12px 12px}
+#runtime-state .table-wrap,#batch-state .table-wrap{margin-bottom:8px}
+#runtime-state td,#batch-state td{font-size:12px}
+#runtime-state p,#batch-state p{font-size:12px;line-height:1.85;margin-bottom:0}

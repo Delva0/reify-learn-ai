@@ -1,0 +1,82 @@
+[
+  {
+    "id": "backend",
+    "name": "hicann/triton-inference-server-ge-backend",
+    "page": "index.html",
+    "title": "GE 推理后端的架构与运行机制",
+    "defaultVersion": "cef0cc5",
+    "versions": [
+      {
+        "id": "cef0cc5",
+        "label": "cef0cc5",
+        "commit": "cef0cc5e456f2d1cb0c04641a1eab6b5be8c16e4",
+        "source": "backend/cef0cc5.mdx",
+        "snapshot": "/data/source-data.json"
+      }
+    ]
+  },
+  {
+    "id": "ge",
+    "name": "hicann/ge",
+    "page": "ge.html",
+    "title": "计算图编译与执行",
+    "defaultVersion": "28aede1",
+    "versions": [
+      {
+        "id": "28aede1",
+        "label": "28aede1",
+        "commit": "28aede1f69af4f15b1432ccf6ba9e29db6f9cfb7",
+        "source": "ge/28aede1.mdx",
+        "facts": "data/ge-facts.json"
+      }
+    ]
+  },
+  {
+    "id": "metadef",
+    "name": "hicann/metadef",
+    "page": "metadef.html",
+    "title": "运行时张量与内存所有权",
+    "defaultVersion": "db380cb",
+    "versions": [
+      {
+        "id": "db380cb",
+        "label": "db380cb",
+        "commit": "db380cb69ac03b97a9851624eb62290034e90962",
+        "source": "metadef/db380cb.mdx",
+        "facts": "data/ge-facts.json"
+      }
+    ]
+  },
+  {
+    "id": "runtime",
+    "name": "hicann/runtime",
+    "page": "runtime.html",
+    "title": "NPU 数据与运行时执行",
+    "defaultVersion": "93b7ec2",
+    "versions": [
+      {
+        "id": "93b7ec2",
+        "label": "93b7ec2",
+        "commit": "93b7ec22fb1141fa30c9c746b7dfa9cab5f53e55",
+        "source": "runtime/93b7ec2.mdx",
+        "facts": "data/ge-facts.json"
+      }
+    ]
+  },
+  {
+    "id": "triton",
+    "name": "triton-inference-server/server",
+    "page": "triton.html",
+    "title": "在线请求与模型调度",
+    "defaultVersion": "8ced3bb",
+    "versions": [
+      {
+        "id": "8ced3bb",
+        "label": "r24.02",
+        "commit": "8ced3bb7f6531d0cb5b3fd3bb095d8afa9f1e2aa",
+        "source": "triton/8ced3bb.mdx",
+        "facts": "data/triton-facts.json"
+      }
+    ]
+  }
+]

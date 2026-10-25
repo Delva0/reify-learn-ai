@@ -1,0 +1,871 @@
+<CodeBlock
+  id="inference-634-696-2"
+  render={false}
+  src="src/inference.cpp"
+  lines="634-696"
+  notes={[
+  {
+    "at": {
+      "line": 671,
+      "pattern": "aclrtSynchronizeStream"
+    },
+    "desc": "正常路径上的完成屏障；此后才 D2H，再由调用线程等待所有工作线程结束。"
+  }
+]}
+  links={[
+  {
+    "at": {
+      "line": 663,
+      "pattern": "ExecuteGraphWithStreamAsync"
+    },
+    "href": "?fp=code&block=ge_api-632-661"
+  }
+]}
+  marks={[
+  {
+    "at": {
+      "line": 671,
+      "pattern": "aclrtSynchronizeStream"
+    },
+    "color": "blue"
+  }
+]}
+/>
+
+<CodeBlock
+  id="readme-17-45"
+  render={false}
+  src="README.md"
+  lines="17-45"
+/>
+
+<CodeBlock
+  id="model_instance_state-175-206-308-315-380-403"
+  render={false}
+  src="src/model_instance_state.cpp"
+  lines="175-206,308-315,380-403"
+/>
+
+<CodeBlock
+  id="npu_ge-91-100-123-139-165-182"
+  render={false}
+  src="src/npu_ge.cpp"
+  lines="91-100,123-139,165-182"
+/>
+
+<CodeBlock
+  id="inference-1420-1430"
+  render={false}
+  src="src/inference.cpp"
+  lines="1420-1430"
+  notes={[
+    {"at":{"line":1424,"text":"GetIdleInstances"},"desc":"共享图和 stream 在本次处理期间独占，结束后才能分配给下一次处理。"}
+  ]}
+  links={[
+    {"at":{"line":1424,"text":"GetIdleInstances"},"href":"?fp=code&block=scheduler-173-187-247-264"},
+    {"at":{"line":1425,"text":"ScopedInstanceStatusReset"},"href":"?fp=code&block=scheduler-139-156"}
+  ]}
+/>
+
+<CodeBlock
+  id="scheduler-173-187-247-264"
+  render={false}
+  src="src/scheduler.cpp"
+  lines="173-187,247-264"
+/>
+
+<CodeBlock
+  id="scheduler-139-156"
+  render={false}
+  src="include/scheduler.h"
+  lines="139-156"
+/>
+
+<CodeBlock
+  id="inference-661-693-987-1037"
+  render={false}
+  src="src/inference.cpp"
+  lines="661-693,987-1037"
+/>
+
+<CodeBlock
+  id="performance-tuning-43-83"
+  render={false}
+  src="docs/性能调优方法论.md"
+  lines="43-83"
+/>
+
+<CodeBlock
+  id="cmakelists-94-95-137-151"
+  render={false}
+  src="CMakeLists.txt"
+  lines="94-95,137-151"
+/>
+
+<CodeBlock
+  id="client-7-24"
+  render={false}
+  src="example/client.py"
+  lines="7-24"
+/>
+
+<CodeBlock
+  id="npu_ge-157-182"
+  render={false}
+  src="src/npu_ge.cpp"
+  lines="157-182"
+  notes={[
+    {"at":{"from":{"line":158},"to":{"line":160}},"desc":"这段注释与当前实现不符。下面直接调用 ProcessRequests，没有进入 MindIE 或 LlmManager 任务队列。"}
+  ]}
+  links={[
+    {"at":{"line":175,"text":"ProcessRequests"},"href":"?fp=code&block=model_instance_state-581-585"}
+  ]}
+/>
+
+<CodeBlock
+  id="model_instance_state-581-585"
+  render={false}
+  src="src/model_instance_state.cpp"
+  lines="581-585"
+  links={[
+    {"at":{"line":584,"text":"HandleRequest"},"href":"?fp=code&block=inference-1454-1479"}
+  ]}
+/>
+
+<CodeBlock
+  id="inference-1454-1479"
+  render={false}
+  src="src/inference.cpp"
+  lines="1454-1479"
+  notes={[
+    {"at":{"line":1456,"text":"preferred_batch_sizes"},"desc":"仅判断列表非空，不要求当前总 batch 命中偏好值。"},
+    {"at":{"line":1457,"text":"MAX_BATCH"},"desc":"后端的 shape 分类：已启用 Triton batch，输出非 batch 维度已知。"},
+    {"at":{"line":1457,"text":"GetInToOutMap"},"desc":"输出未知轴的推导映射；这里还要求映射为空。"}
+  ]}
+  links={[
+    {"at":{"line":1456,"text":"preferred_batch_sizes"},"href":"?fp=code&block=model_state-246-284"},
+    {"at":{"line":1457,"text":"MAX_BATCH"},"href":"?fp=code&block=model_state-586-599-627-635"},
+    {"at":{"line":1457,"text":"GetInToOutMap"},"href":"?fp=code&block=model_state-942-957"},
+    {"at":{"line":1464,"text":"BatchSplicTasks"},"href":"?fp=code&block=inference-1420-1430-2"},
+    {"at":{"line":1474,"text":"BatchSplicTasks"},"href":"?fp=code&block=inference-1420-1430-2"}
+  ]}
+/>
+
+<CodeBlock
+  id="model_state-246-284"
+  render={false}
+  src="src/model_state.cpp"
+  lines="246-284"
+/>
+
+<CodeBlock
+  id="model_state-586-599-627-635"
+  render={false}
+  src="src/model_state.cpp"
+  lines="586-599,627-635"
+/>
+
+<CodeBlock
+  id="model_state-942-957"
+  render={false}
+  src="src/model_state.cpp"
+  lines="942-957"
+/>
+
+<CodeBlock
+  id="inference-1420-1430-2"
+  render={false}
+  src="src/inference.cpp"
+  lines="1420-1430"
+/>
+
+<CodeBlock
+  id="config-1-40"
+  render={false}
+  src="example/resnet/config.pbtxt"
+  lines="1-40"
+/>
+
+<CodeBlock
+  id="npu_ge-91-100-123-139"
+  render={false}
+  src="src/npu_ge.cpp"
+  lines="91-100,123-139"
+  links={[
+    {"at":{"line":98,"pattern":"ModelState::Create"},"href":"?fp=code&block=model_state-687-703-1049-1065"},
+    {"at":{"line":136,"pattern":"ModelInstanceState::Create"},"href":"?fp=code&block=model_instance_state-551-570"}
+  ]}
+/>
+
+<CodeBlock
+  id="model_state-687-703-1049-1065"
+  render={false}
+  src="src/model_state.cpp"
+  lines="687-703,1049-1065"
+/>
+
+<CodeBlock
+  id="model_instance_state-551-570"
+  render={false}
+  src="src/model_instance_state.cpp"
+  lines="551-570"
+  links={[
+    {"at":{"line":569,"text":"Inference"},"href":"?fp=code&block=inference-99-104"}
+  ]}
+/>
+
+<CodeBlock
+  id="inference-99-104"
+  render={false}
+  src="src/inference.cpp"
+  lines="99-104"
+/>
+
+<CodeBlock
+  id="model_instance_state-565-584"
+  render={false}
+  src="src/model_instance_state.cpp"
+  lines="565-584"
+/>
+
+<CodeBlock
+  id="scheduler-28-54"
+  render={false}
+  src="include/scheduler.h"
+  lines="28-54"
+/>
+
+<CodeBlock
+  id="model_state-369-419-687-695"
+  render={false}
+  src="src/model_state.cpp"
+  lines="369-419,687-695"
+/>
+
+<CodeBlock
+  id="model_state-263-267"
+  render={false}
+  src="include/model_state.h"
+  lines="263-267"
+/>
+
+<CodeBlock
+  id="model_instance_state-308-315-406-415"
+  render={false}
+  src="src/model_instance_state.cpp"
+  lines="308-315,406-415"
+/>
+
+<CodeBlock
+  id="config-22-40"
+  render={false}
+  src="example/resnet/config.pbtxt"
+  lines="22-40"
+/>
+
+<CodeBlock
+  id="model_instance_state-460-507"
+  render={false}
+  src="src/model_instance_state.cpp"
+  lines="460-507"
+/>
+
+<CodeBlock
+  id="model_instance_state-175-206"
+  render={false}
+  src="src/model_instance_state.cpp"
+  lines="175-206"
+  links={[
+    {"at":{"line":190,"text":"ParseGraph"},"href":"?fp=code&block=model_instance_state-225-257"},
+    {"at":{"line":194,"text":"AddAndCompileGraph"},"href":"?fp=code&block=model_instance_state-260-284"},
+    {"at":{"line":198,"text":"CreateAndLoadStream"},"href":"?fp=code&block=model_instance_state-286-304"},
+    {"at":{"line":202,"text":"AddInstance"},"href":"?fp=code&block=scheduler-28-34"}
+  ]}
+/>
+
+<CodeBlock
+  id="model_instance_state-225-257"
+  render={false}
+  src="src/model_instance_state.cpp"
+  lines="225-257"
+/>
+
+<CodeBlock
+  id="model_instance_state-260-284"
+  render={false}
+  src="src/model_instance_state.cpp"
+  lines="260-284"
+/>
+
+<CodeBlock
+  id="model_instance_state-286-304"
+  render={false}
+  src="src/model_instance_state.cpp"
+  lines="286-304"
+/>
+
+<CodeBlock
+  id="scheduler-28-34"
+  render={false}
+  src="src/scheduler.cpp"
+  lines="28-34"
+/>
+
+<CodeBlock
+  id="model_instance_state-380-403"
+  render={false}
+  src="src/model_instance_state.cpp"
+  lines="380-403"
+  notes={[
+    {"at":{"line":393,"pattern":"sessions\\[0\\]"},"desc":"同卡静态图共享 Session；各对象仍在图初始化时创建各自的 graph ID 和 stream。"}
+  ]}
+  links={[
+    {"at":{"line":387,"text":"GetGeStaticMode"},"href":"?fp=code&block=model_state-413-424-668-685"}
+  ]}
+/>
+
+<CodeBlock
+  id="model_state-413-424-668-685"
+  render={false}
+  src="src/model_state.cpp"
+  lines="413-424,668-685"
+/>
+
+<CodeBlock
+  id="model_state-511-520"
+  render={false}
+  src="src/model_state.cpp"
+  lines="511-520"
+/>
+
+<CodeBlock
+  id="model_state-413-424"
+  render={false}
+  src="src/model_state.cpp"
+  lines="413-424"
+/>
+
+<CodeBlock
+  id="model_state-668-685"
+  render={false}
+  src="src/model_state.cpp"
+  lines="668-685"
+/>
+
+<CodeBlock
+  id="inference-160-175"
+  render={false}
+  src="src/inference.cpp"
+  lines="160-175"
+/>
+
+<CodeBlock
+  id="model_instance_state-406-415-451-457-510-536"
+  render={false}
+  src="src/model_instance_state.cpp"
+  lines="406-415,451-457,510-536"
+/>
+
+<CodeBlock
+  id="model_instance_state-225-242"
+  render={false}
+  src="src/model_instance_state.cpp"
+  lines="225-242"
+/>
+
+<CodeBlock
+  id="inference-117-140"
+  render={false}
+  src="src/inference.cpp"
+  lines="117-140"
+/>
+
+<CodeBlock
+  id="inference-1420-1430-3"
+  render={false}
+  src="src/inference.cpp"
+  lines="1420-1430"
+  notes={[
+    {"at":{"line":1424,"text":"nullptr"},"desc":"调用方未提供 context 偏好；调度器仍从设备组中选择空闲对象。"}
+  ]}
+  links={[
+    {"at":{"line":1422,"text":"GetScheduler"},"href":"?fp=code&block=model_state-159-162-263"},
+    {"at":{"line":1424,"text":"GetIdleInstances"},"href":"?fp=code&block=scheduler-247-255"},
+    {"at":{"line":1425,"text":"ScopedInstanceStatusReset"},"href":"?fp=code&block=scheduler-139-156-2"},
+    {"at":{"line":1426,"text":"ProcessCombineRequestV2"},"href":"?fp=code&block=inference-987-1037"}
+  ]}
+  marks={[
+    {"at":{"line":1425,"text":"ScopedInstanceStatusReset"},"color":"blue"}
+  ]}
+/>
+
+<CodeBlock
+  id="model_state-159-162-263"
+  render={false}
+  src="include/model_state.h"
+  lines="159-162,263"
+  notes={[
+    {"at":{"line":263,"text":"scheduler_"},"desc":"ModelState 的成员；同一模型版本的各 Inference 都通过这份 ModelState 取得同一个 Scheduler。"}
+  ]}
+/>
+
+<CodeBlock
+  id="scheduler-247-255"
+  render={false}
+  src="src/scheduler.cpp"
+  lines="247-255"
+  links={[
+    {"at":{"line":252,"text":"WaitForIdleInstances"},"href":"?fp=code&block=scheduler-182-187"},
+    {"at":{"line":254,"text":"SelectInstancesWithLoadBalance"},"href":"?fp=code&block=scheduler-217-243"}
+  ]}
+/>
+
+<CodeBlock
+  id="scheduler-182-187"
+  render={false}
+  src="src/scheduler.cpp"
+  lines="182-187"
+/>
+
+<CodeBlock
+  id="scheduler-217-243"
+  render={false}
+  src="src/scheduler.cpp"
+  lines="217-243"
+  links={[
+    {"at":{"line":242,"text":"UpdateSelectedInstancesStatus"},"href":"?fp=code&block=scheduler-173-179-blue"}
+  ]}
+/>
+
+<CodeBlock
+  id="scheduler-173-179-blue"
+  render={false}
+  src="src/scheduler.cpp"
+  lines="173-179@blue"
+/>
+
+<CodeBlock
+  id="scheduler-139-156-2"
+  render={false}
+  src="include/scheduler.h"
+  lines="139-156"
+  notes={[
+    {"at":{"line":151,"pattern":"Scheduler::Status::IDLE"},"desc":"成功返回和错误返回都会触发守卫析构；它负责恢复状态。"}
+  ]}
+  links={[
+    {"at":{"line":151,"text":"SetInstanceStatus"},"href":"?fp=code&block=scheduler-258-265"}
+  ]}
+  marks={[
+    {"at":{"line":151,"pattern":"Scheduler::Status::IDLE"},"color":"blue"}
+  ]}
+/>
+
+<CodeBlock
+  id="scheduler-258-265"
+  render={false}
+  src="src/scheduler.cpp"
+  lines="258-265"
+/>
+
+<CodeBlock
+  id="inference-987-1037"
+  render={false}
+  src="src/inference.cpp"
+  lines="987-1037"
+/>
+
+<CodeBlock
+  id="inference-987-1037-2"
+  render={false}
+  src="src/inference.cpp"
+  lines="987-1037"
+  notes={[
+    {"at":{"line":1001,"text":"input_offset"},"desc":"原请求的前缀和，用于响应切片；与执行均分的边界独立。"},
+    {"at":{"line":1015,"text":"instance_offset"},"desc":"按 P 个执行对象均分后的位置，用于取输入和 D2H 写回。"}
+  ]}
+  links={[
+    {"at":{"line":1001,"text":"input_offset"},"href":"?fp=code&block=inference-143-150-amber"},
+    {"at":{"line":1015,"text":"instance_offset"},"href":"?fp=code&block=inference-207-225-blue"},
+    {"at":{"line":1018,"text":"CalculateBatchDistribution"},"href":"?fp=code&block=inference-207-225-blue"},
+    {"at":{"line":1021,"text":"DispatchInference"},"href":"?fp=code&block=inference-951-967"},
+    {"at":{"line":1030,"text":"BuildCombineResponses"},"href":"?fp=code&block=inference-970-984-amber"}
+  ]}
+  marks={[
+    {"at":{"line":1001,"text":"input_offset"},"color":"amber"},
+    {"at":{"line":1015,"text":"instance_offset"},"color":"blue"}
+  ]}
+/>
+
+<CodeBlock
+  id="inference-143-150-amber"
+  render={false}
+  src="src/inference.cpp"
+  lines="143-150@amber"
+/>
+
+<CodeBlock
+  id="inference-207-225-blue"
+  render={false}
+  src="src/inference.cpp"
+  lines="207-225@blue"
+/>
+
+<CodeBlock
+  id="inference-951-967"
+  render={false}
+  src="src/inference.cpp"
+  lines="951-967"
+/>
+
+<CodeBlock
+  id="inference-970-984-amber"
+  render={false}
+  src="src/inference.cpp"
+  lines="970-984@amber"
+  links={[
+    {"at":{"line":979,"text":"BuildComblineResponse"},"href":"?fp=code&block=inference-1040-1065-amber"}
+  ]}
+/>
+
+<CodeBlock
+  id="inference-1040-1065-amber"
+  render={false}
+  src="src/inference.cpp"
+  lines="1040-1065@amber"
+  notes={[
+    {"at":{"line":1063,"text":"TRITONBACKEND_RequestRelease"},"desc":"本请求在此释放；外层批次后续仍可能失败，不能再按整批未释放来处理。"}
+  ]}
+/>
+
+<CodeBlock
+  id="inference-279-414-470-479"
+  render={false}
+  src="src/inference.cpp"
+  lines="279-414,470-479"
+/>
+
+<CodeBlock
+  id="inference-613-631"
+  render={false}
+  src="src/inference.cpp"
+  lines="613-631"
+  links={[
+    {"at":{"line":626,"text":"BuildInputTensorV2"},"href":"?fp=code&block=inference-592-609"}
+  ]}
+/>
+
+<CodeBlock
+  id="inference-592-609"
+  render={false}
+  src="src/inference.cpp"
+  lines="592-609"
+  notes={[
+    {"at":{"line":607,"text":"dev_buffer"},"desc":"这里只把后端管理的 HBM 地址包装进张量；缓冲区所有权仍在本次调用。"}
+  ]}
+/>
+
+<CodeBlock
+  id="inference-207-225-679-687"
+  render={false}
+  src="src/inference.cpp"
+  lines="207-225,679-687"
+/>
+
+<CodeBlock
+  id="inference-143-150-1040-1053"
+  render={false}
+  src="src/inference.cpp"
+  lines="143-150,1040-1053"
+/>
+
+<CodeBlock
+  id="inference-951-967-2"
+  render={false}
+  src="src/inference.cpp"
+  lines="951-967"
+  links={[
+    {"at":{"line":957,"text":"ExecuteInferenceV2"},"href":"?fp=code&block=inference-842-864"},
+    {"at":{"line":962,"text":"ExecuteInferenceParallelV2"},"href":"?fp=code&block=inference-866-903"}
+  ]}
+/>
+
+<CodeBlock
+  id="inference-842-864"
+  render={false}
+  src="src/inference.cpp"
+  lines="842-864"
+/>
+
+<CodeBlock
+  id="inference-866-903"
+  render={false}
+  src="src/inference.cpp"
+  lines="866-903"
+  links={[
+    {"at":{"line":889,"text":"ProcessSingleInstanceV2"},"href":"?fp=code&block=inference-816-838"}
+  ]}
+/>
+
+<CodeBlock
+  id="inference-816-838"
+  render={false}
+  src="src/inference.cpp"
+  lines="816-838"
+  links={[
+    {"at":{"line":832,"text":"ExecuteSingleInferenceV2"},"href":"?fp=code&block=inference-765-812"}
+  ]}
+/>
+
+<CodeBlock
+  id="inference-765-812"
+  render={false}
+  src="src/inference.cpp"
+  lines="765-812"
+  links={[
+    {"at":{"line":803,"text":"ExecuteInferenceCycleV2"},"href":"?fp=code&block=inference-634-696"}
+  ]}
+/>
+
+<CodeBlock
+  id="inference-634-696"
+  render={false}
+  src="src/inference.cpp"
+  lines="634-696"
+  notes={[
+    {"at":{"line":671,"text":"aclrtSynchronizeStream"},"desc":"正常路径上的完成屏障；此后才 D2H，再由调用线程等待所有工作线程结束。"}
+  ]}
+  links={[
+    {"at":{"line":663,"text":"ExecuteGraphWithStreamAsync"},"href":"?fp=code&block=ge_api-632-661"}
+  ]}
+  marks={[
+    {"at":{"line":671,"text":"aclrtSynchronizeStream"},"color":"blue"}
+  ]}
+/>
+
+<CodeBlock
+  id="ge_api-632-661"
+  render={false}
+  src="https://github.com/hicann/ge/blob/28aede1f69af4f15b1432ccf6ba9e29db6f9cfb7/api/session/client/ge_api.cc"
+  lines="632-661"
+/>
+
+<CodeBlock
+  id="inference-661-693"
+  render={false}
+  src="src/inference.cpp"
+  lines="661-693"
+/>
+
+<CodeBlock
+  id="inference-970-984-1040-1065"
+  render={false}
+  src="src/inference.cpp"
+  lines="970-984,1040-1065"
+/>
+
+<CodeBlock
+  id="inference-160-175-643-663"
+  render={false}
+  src="src/inference.cpp"
+  lines="160-175,643-663"
+/>
+
+<CodeBlock
+  id="npu_ge-108-115-147-154"
+  render={false}
+  src="src/npu_ge.cpp"
+  lines="108-115,147-154"
+/>
+
+<CodeBlock
+  id="model_instance_state-572-579"
+  render={false}
+  src="src/model_instance_state.cpp"
+  lines="572-579"
+/>
+
+<CodeBlock
+  id="model_state-1117-1120"
+  render={false}
+  src="src/model_state.cpp"
+  lines="1117-1120"
+/>
+
+<CodeBlock
+  id="scheduler-305-307"
+  render={false}
+  src="src/scheduler.cpp"
+  lines="305-307"
+/>
+
+<CodeBlock
+  id="npu_ge-175-180"
+  render={false}
+  src="src/npu_ge.cpp"
+  lines="175-180"
+/>
+
+<CodeBlock
+  id="scheduler-67-107-141-169-217-243"
+  render={false}
+  src="src/scheduler.cpp"
+  lines="67-107,141-169,217-243"
+/>
+
+<CodeBlock
+  id="model_state-140-149"
+  render={false}
+  src="src/model_state.cpp"
+  lines="140-149"
+/>
+
+<CodeBlock
+  id="model_instance_state-114-138"
+  render={false}
+  src="src/model_instance_state.cpp"
+  lines="114-138"
+/>
+
+# GE 推理后端的架构与运行机制
+
+本仓将 Triton 的模型加载与推理接口适配到 GE / ACL，在昇腾 NPU 上执行图。它编译为 [libtriton_npu_ge.so](?fp=code&block=cmakelists-94-95-137-151)，由 `tritonserver` 加载到进程内。
+
+## 服务化与资源复用
+
+<Section id="backend-basics">
+
+GE/ACL 提供加载图、管理设备内存并在 NPU 上执行的接口。接入在线服务后，输入会持续从不同请求到达；需要将请求数据交给这些执行资源，并把每份输出交回原请求。本仓的 [接入目标](?fp=code&block=readme-17-45)是让 CV/NLP 模型通过 Triton 使用昇腾 NPU，同时利用 GE 的图执行能力提高服务吞吐。
+
+### 将昂贵准备移出每次推理
+
+[初始化路径](?fp=code&block=model_instance_state-175-206-308-315-380-403)在加载阶段准备图、Session 和 stream；请求到达后使用已经准备好的资源。若每个请求都重新解析、编译和装载同一模型，准备成本会反复进入请求延迟。
+
+Triton 的 [生命周期与执行回调](?fp=code&block=npu_ge-91-100-123-139-165-182)给这套分工提供边界：模型加载时准备长期状态，执行回调处理本次请求，模型卸载时清理长期资源。这就是上层服务接口与下层 GE 能力需要适配的地方。
+
+### 长期资源与请求资源的生命周期不同
+
+图与 stream 跨请求保留，输入输出缓冲区服务于本次计算。设备尚在读取某个输入地址时，这块存储必须继续有效；多个请求共享图执行资源时，还需要协调同时使用的问题。
+
+本后端把图和 stream 关联到 `Scheduler::Instance`，通过 [BatchSplicTasks](?fp=code&block=inference-1420-1430)选择本次占用的对象。正常路径上，[stream 同步、D2H 与响应构建](?fp=code&block=inference-661-693-987-1037)完成后才归还。资源池使多个服务实例可以共享预加载资源，并明确每次处理的占用期。
+
+### 吞吐提高会改变等待与资源占用
+
+合批把多份请求变成较大的设备工作；多 Session、多 stream 让独立工作有机会重叠。它们都需要请求供给，并可能增加等待、Host 工作和常驻或临时内存，收益取决于实际瓶颈。
+
+[仓库的 CN-CLIP 调优数据](?fp=code&block=performance-tuning-43-83)记录了从单请求并发、batch=1，到提高并发并启用合批和多流后的变化：吞吐约从 191 增至 1329 infer/s，平均延迟约从 5.2 增至 48.1 ms。这组对照同时改变了多个设置，展示了整体方案的吞吐与延迟取舍，不能单独归因于一个开关。
+
+</Section>
+
+## 执行资源与请求处理
+
+<Annotations notes={{
+  instances: "H 为 instance_group 各项 count 的总和，即 Triton 模型实例数。",
+  devices: "D 为 device_ids 指定的设备数。",
+  parallelism: "P 为一次 BatchSplicTasks 从 Scheduler 取得的对象数，由本后端的 instance_exec_blocks 指定，默认 1。",
+  "per-device": "K 为每张设备上创建的 Scheduler::Instance 数；device_exec_blocks 显式设置时覆盖自动计算。",
+  total: "E 为模型共享的 Scheduler::Instance 总数，每个对象对应自己的 graph ID 和 stream。",
+  running: "C 为已经取得执行资源、尚未归还的 BatchSplicTasks 调用数；等待资源的调用不计入。"
+}} />
+
+<Section id="runtime">
+
+### 进程边界与调用入口
+
+[客户端发送请求](?fp=code&block=client-7-24)。HTTP/gRPC 到达 `tritonserver` 后，Triton 同进程调用 [TRITONBACKEND_ModelInstanceExecute](?fp=code&block=npu_ge-157-182)，再经 [ProcessRequests](?fp=code&block=model_instance_state-581-585) 进入 `Inference::HandleRequest`。
+
+[config.pbtxt](?fp=code&block=config-1-40) 同时承载 Triton 设置和后端参数：Triton 按 `backend` 选择共享库，按 `instance_group` 创建模型实例；`npu_ge` 从 `parameters` 读取设备与执行并行度。
+
+</Section>
+
+<Section id="model">
+
+### 模型实例与资源共享
+
+[ModelInitialize / ModelInstanceInitialize](?fp=code&block=npu_ge-91-100-123-139) 建立两层状态：每个已加载的模型版本有一份 `ModelState`；每个 Triton 模型实例有自己的 `ModelInstanceState` 和 [Inference](?fp=code&block=model_instance_state-565-584)。它们引用同一份 `ModelState`，从而共享其中的 `Scheduler`。
+
+`Scheduler` 将加载时创建的图与 stream 组织为共享资源池，每次处理取得 _P_ 个 [Scheduler::Instance](?fp=code&block=scheduler-28-54)，结束后归还。各 Triton 模型实例不固定绑定池中的某个图，模型实例数与执行资源数可以分别设置。
+
+令 _H_ 为 Triton 模型实例数，_D_ 为设备数，_P_ 为一次处理使用的 `Scheduler::Instance` 数。_P_ 由本后端的 <TextNote href="?fp=code&block=model_state-369-419-687-695" desc="instance_exec_blocks 和 device_exec_blocks 都由 npu_ge 定义，可写在 config.pbtxt 的 parameters 中，也可通过 tritonserver 的 --backend-config=npu_ge,instance_exec_blocks=2 传入。当前构造顺序先读 backend-config，再读模型 parameters，后者可覆盖前者。">instance_exec_blocks</TextNote> 控制，[默认 1](?fp=code&block=model_state-263-267)。
+
+[初始化](?fp=code&block=model_instance_state-308-315-406-415)将 _HP_ 的需求分摊到各设备，得到每卡对象数 _K_ 和总数 _E_：
+
+$$
+\begin{aligned}
+\annotate{per-device}{\slot{K}}&=\begin{cases}\texttt{device\_exec\_blocks},&\text{explicit}\\\lceil\annotate{instances}{\request{H}}\annotate{parallelism}{\slot{P}}/\annotate{devices}{D}\rceil,&\text{otherwise}\end{cases}\\
+\annotate{total}{\slot{E}}&=D\slot{K},\qquad
+\annotate{running}{\request{C}}\le\min(\request{H},\lfloor\slot{E}/\slot{P}\rfloor)
+\end{aligned}
+$$
+
+并发上界按同一 Triton 模型实例的 Execute 串行、每次占用 _P_ 个对象计算，要求 _H_、_D_、_P_ 为正且 _E_≥_P_。[示例](?fp=code&block=config-22-40) _H_=1、_D_=2、_P_=1，因而每卡创建 1 个对象，共 2 个；一次处理只取其中 1 个。两张卡不会自动让同一次处理并行。
+
+<RuntimeState />
+
+</Section>
+
+<Section id="loading">
+
+### 图初始化与共享边界
+
+同一模型的[首个 Triton 模型实例](?fp=code&block=model_instance_state-460-507)负责准备设备和图执行资源。[InitGraphSession](?fp=code&block=model_instance_state-175-206) 完成图编译与装载后，才将资源交给共享 `Scheduler`。GE 内部实现见[图生命周期](ge.html#lifecycle)。
+
+共享关系取决于 [CreateSessions](?fp=code&block=model_instance_state-380-403)：动态 GE 图为每个 `Scheduler::Instance` 创建 Session；静态 GE 图在同卡内共用一个 Session。两种情况下，每个对象都有自己的 graph ID 和 stream；同卡 context 从设备当前 context 取得。资源池中有 _E_ 个对象，不意味着 Session、context 都有 _E_ 份。
+
+Triton 的 batch 设置与 GE 静态图开关分别参与控制流。[max_batch_size](?fp=code&block=model_state-511-520)决定后端的 `InferMode`，[static_model](?fp=code&block=model_state-413-424)设置 GE 图模式；`max_batch_size=0` 且 I/O shape 固定时，[ResetStaticMode](?fp=code&block=model_state-668-685)还会自动启用 GE 静态模式。最终执行 batch 取决于[这些设置的组合](?fp=code&block=inference-160-175)。GE 自己的 shape 分档通过图配置传递，与后端如何切分请求分别配置。
+
+初始化为各图创建临时线程，随后全部 [join](?fp=code&block=model_instance_state-406-415-451-457-510-536)；但 [ParseGraph 的 mutex](?fp=code&block=model_instance_state-225-242)使解析阶段串行。`Inference::Start()` [只设置 timeout 与状态](?fp=code&block=inference-117-140)，没有常驻消费线程。
+
+</Section>
+
+<Section id="algorithm">
+
+### 请求合并、执行切分与响应还原
+
+[HandleRequest](?fp=code&block=inference-1454-1479) 的 if 分支将收到的 _n_ 个请求交给一次 `BatchSplicTasks`；else 分支循环调用 _n_ 次，每次只处理一个请求。`dynamic_batching` 由 Triton 组织请求集合，后端的这个分支才负责 tensor 拼接。
+
+仅配置 `dynamic_batching {}` 不会使后端进入拼接分支；`preferred_batch_size` 只要非空即可，后端不检查总 batch 是否命中偏好值。原始 ResNet 配置走逐请求分支。
+
+[BatchSplicTasks](?fp=code&block=inference-1420-1430-3) 先从 `Scheduler` 取得 _P_ 个对象。[GetIdleInstances](?fp=code&block=scheduler-247-255) 在 mutex 内等待足够的 IDLE 对象，再一次性改为 RUNNING，避免同一图与 stream 同时被两次处理占用。之后才准备输入、执行和响应；[ScopedInstanceStatusReset](?fp=code&block=scheduler-139-156-2) 让对象在整个调用退出时恢复 IDLE，并通知等待者。
+
+[ProcessCombineRequestV2](?fp=code&block=inference-987-1037-2)保留两套边界：原请求的 batch 边界用于返回响应，均分后的边界用于分配执行工作。例如 A、B 的 batch 为 2、3，_P_=2：
+
+```text
+拼接输入       [ A₁ A₂ B₁ B₂ B₃ ]
+执行切分       [ A₁ A₂ B₁ ] [ B₂ B₃ ]     batch = 3, 2
+响应切分       [ A₁ A₂ ] [ B₁ B₂ B₃ ]     batch = 2, 3
+```
+
+执行对象与请求没有一一对应关系。未进入拼接分支时，A、B 顺序处理，每次仍使用 _P_=2 个对象，分别切成 1+1、2+1。
+
+这要求模型按 batch 可分离：
+
+$$
+f_\theta(\mathrm{concat}_0(X_0,\ldots,X_m))
+=\mathrm{concat}_0(f_\theta(X_0),\ldots,f_\theta(X_m))
+$$
+
+前面的配置与 shape 判断并未验证这个数学性质。
+
+<BatchPlan />
+
+输入按原请求顺序 [H2D 到各输入的总缓冲区](?fp=code&block=inference-279-414-470-479)，每个执行对象<TextNote href="?fp=code&block=inference-613-631" desc="gert::Tensor 包装后端申请的 HBM 地址；缓冲区由本次调用管理，张量描述不转移所有权。">引用自己区间的 HBM</TextNote>，再分配临时设备输出。不同对象的结果按[执行偏移](?fp=code&block=inference-207-225-679-687) D2H 回同一个主机总输出，响应再按[请求偏移](?fp=code&block=inference-143-150-1040-1053)切片。张量引用与缓冲区所有权见 [metadef](metadef.html#tensor-lifetime)。
+
+[DispatchInference](?fp=code&block=inference-951-967-2) 在 _P_=1 时直接调用，_P_>1 时[临时创建 _P_ 个工作线程并 join](?fp=code&block=inference-866-903)。正常路径上，[ExecuteGraphWithStreamAsync](?fp=!((block:ge_api-632-661,type:code),(block:inference-634-696-2,type:code))) 后紧接 [stream 同步和 D2H](?fp=code&block=inference-661-693)，所有工作完成后才[按原请求发送 FINAL 响应并释放请求](?fp=code&block=inference-970-984-1040-1065)。因此 Async 接口并未使 Execute 提前返回，资源池对象也一直占用到响应构建和局部缓冲区释放结束。
+
+分到一个 batch 也不一定只执行一次图。[静态 one-batch 分支](?fp=code&block=inference-160-175-643-663)把分到的 batch 循环执行，每次 batch=1，必要时先 D2D 复制单样本输入；其余分支一次提交分到的 batch。
+
+</Section>
+
+<Section id="implementation">
+
+### 实现边界
+
+[资源销毁](?fp=code&block=npu_ge-108-115-147-154)目前只明确删除后端状态。[ModelInstanceState 析构](?fp=code&block=model_instance_state-572-579)删除 `Inference`，但 [ModelState](?fp=code&block=model_state-1117-1120) 与 [Scheduler](?fp=code&block=scheduler-305-307) 的析构尚未调用 [GE 的正常卸载流程](ge.html#lifecycle)，Session、图、stream 的释放链不完整。
+
+[响应失败路径](?fp=code&block=inference-970-984-1040-1065)可能在部分请求已发送并释放后返回失败，再由 [Execute 返回 error](?fp=code&block=npu_ge-175-180)。批次层没有维护逐请求的释放进度，此时请求所有权可能已部分移交。
+
+[设备组负载选择](?fp=code&block=scheduler-67-107-141-169-217-243)也有实现缺口：选择后递增了所有组的 `selected_per_group`，且没有回写候选结构中的 `selected_count`，所以单次选取内不会按新选择持续更新组负载。
+
+[global.* 配置](?fp=code&block=model_state-140-149)被收集到 `geOption_`，但 [GEInitialize](?fp=code&block=model_instance_state-114-138)没有合并这份映射。配置被解析不等于配置已经生效。
+
+</Section>

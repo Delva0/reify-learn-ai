@@ -1,0 +1,1119 @@
+<pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!--</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># Copyright 2018-2023, NVIDIA CORPORATION &#x26; AFFILIATES. All rights reserved.</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># Redistribution and use in source and binary forms, with or without</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># modification, are permitted provided that the following conditions</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># are met:</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#  * Redistributions of source code must retain the above copyright</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#    notice, this list of conditions and the following disclaimer.</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#  * Redistributions in binary form must reproduce the above copyright</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#    notice, this list of conditions and the following disclaimer in the</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#    documentation and/or other materials provided with the distribution.</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#  * Neither the name of NVIDIA CORPORATION nor the names of its</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#    contributors may be used to endorse or promote products derived</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#    from this software without specific prior written permission.</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">--></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># Model Configuration</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**Is this your first time writing a config file?**</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Check out</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">this guide</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/tutorials/tree/main/Conceptual_Guide/Part_1-model_deployment#model-configuration</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"> or this</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">example</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/tutorials/tree/main/HuggingFace#examples</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)!</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Each model in a [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">model repository</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">model_repository.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) must include a</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model configuration that provides required and optional information</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">about the model. Typically, this configuration is provided in a</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">config.pbtxt file specified as [ModelConfig</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">protobuf](https://github.com/triton-inference-server/common/blob/main/protobuf/model_config.proto).</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">In some cases, discussed in [Auto-Generated Model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Configuration](#auto-generated-model-configuration), the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configuration can be generated automatically by Triton and so does not</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">need to be provided explicitly.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">This section describes the most important model configuration</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">properties but the documentation in the [ModelConfig</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">protobuf](https://github.com/triton-inference-server/common/blob/main/protobuf/model_config.proto)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">should also be consulted.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Minimal Model Configuration</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">A minimal model configuration must specify the [</span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*platform*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> and/or</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*backend*</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">properties](https://github.com/triton-inference-server/backend/blob/main/README.md#backends),</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*max_batch_size*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property, and the input and output tensors of the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">As an example consider a TensorRT model that has two inputs, </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*input0*</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">and </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*input1*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, and one output, </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*output0*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, all of which are 16 entry</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">float32 tensors. The minimal configuration is:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  platform: "tensorrt_plan"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  max_batch_size: 8</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  input [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      name: "input0"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      dims: [ 16 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    },</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      name: "input1"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      dims: [ 16 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  output [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      name: "output0"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      dims: [ 16 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Name, Platform and Backend</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The model configuration </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*name*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property is optional. If the name of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the model is not specified in the configuration it is assumed to be</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the same as the model repository directory containing the model. If</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*name*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> is specified it must match the name of the model repository</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">directory containing the model.  The required values for </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*platform*</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">and </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*backend*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> are described in the [backend</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">documentation](https://github.com/triton-inference-server/backend/blob/main/README.md#backends).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Model Transaction Policy</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*model_transaction_policy*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property describes the nature of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">transactions expected from the model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### Decoupled</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">This boolean setting indicates whether responses generated by</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the model are [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">decoupled</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./decoupled_models.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">with the requests issued to it. Using decoupled means the number of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">responses generated by the model may differ from number of requests</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">issued, and the responses may be out of order relative to the order</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">of requests. The default is false, which means the model will</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">generate exactly one response for each request.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Maximum Batch Size</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*max_batch_size*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property indicates the maximum batch size that</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the model supports for the [types of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batching](architecture.md#models-and-schedulers) that can be exploited</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">by Triton. If the model's batch dimension is the first dimension, and</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">all inputs and outputs to the model have this batch dimension, then</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton can use its [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">dynamic batcher</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#dynamic-batcher</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) or [sequence</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batcher](#sequence-batcher) to automatically use batching with the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model. In this case </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*max_batch_size*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> should be set to a value</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">greater-or-equal-to 1 that indicates the maximum batch size that</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton should use with the model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For models that do not support batching, or do not support batching in</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the specific ways described above, </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*max_batch_size*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> must be set to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">zero.</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Inputs and Outputs</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Each model input and output must specify a name, datatype, and shape.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The name specified for an input or output tensor must match the name</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">expected by the model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### Special Conventions for PyTorch Backend</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**Naming Convention:**</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Due to the absence of sufficient metadata for inputs/outputs in TorchScript</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model files, the "name" attribute of inputs/outputs in the configuration must</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">follow specific naming conventions. These are detailed below.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">1.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [Only for Inputs] When the input is not a Dictionary of Tensors, the input</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">names in the configuration file should mirror the names of the input arguments to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the forward function in the model's definition.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For example, if the forward function for the Torchscript model was defined as</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">`forward(self, input0, input1)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, the first and second inputs should be named</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">"input0" and "input1" respectively.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">2.</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> `&#x3C;name>__&#x3C;index>`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: Where \&#x3C;name</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> can be any string and \&#x3C;index</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> is an</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">integer index that refers to the position of the corresponding input/output.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">This means that if there are two inputs and two outputs, the first and second</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">inputs can be named "INPUT__0" and "INPUT__1" and the first and second outputs</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">can be named "OUTPUT__0" and "OUTPUT__1" respectively.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">3.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> If all inputs (or outputs) do not follow the same naming convention, then we</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">enforce strict ordering from the model configuration i.e. we assume the order of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">inputs (or outputs) in the configuration is the true ordering of these inputs.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**</span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*Dictionary of Tensors as Input:*</span><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The PyTorch backend supports passing of inputs to the model in the form of a</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Dictionary of Tensors. This is only supported when there is a </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*single*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> input to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the model of type Dictionary that contains a mapping of string to tensor. As an</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">example, if there is a model that expects the input of the form:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{'A': tensor1, 'B': tensor2}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The input names in the configuration in this case must not follow the above</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">naming conventions </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`&#x3C;name>__&#x3C;index>`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">. Instead, the names of the inputs in this</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">case must map to the string value 'key' for that specific tensor. For this case,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the inputs would be "A" and "B", where input "A" refers to value corresponding to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">tensor1 and "B" refers to the value corresponding to tensor2.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;br></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The datatypes allowed for input and output tensors varies based on the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">type of the model. Section [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Datatypes</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#datatypes</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) describes the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">allowed datatypes and how they map to the datatypes of each model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">type.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">An input shape indicates the shape of an input tensor expected by the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model and by Triton in inference requests. An output shape indicates</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the shape of an output tensor produced by the model and returned by</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton in response to an inference request. Both input and output</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">shape must have rank greater-or-equal-to 1, that is, the empty shape</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**[ ]**</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> is not allowed.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Input and output shapes are specified by a combination of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*max_batch_size*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> and the dimensions specified by the input or output</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*dims*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property. For models with </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*max_batch_size*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> greater-than 0, the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">full shape is formed as [ -1 ] + </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*dims*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">. For models with</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*max_batch_size*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> equal to 0, the full shape is formed as </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*dims*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">. For</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">example, for the following configuration the shape of "input0" is [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">-1, 16 ] and the shape of "output0" is [ -1, 4 ].</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  platform: "tensorrt_plan"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  max_batch_size: 8</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  input [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      name: "input0"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      dims: [ 16 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  output [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      name: "output0"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      dims: [ 4 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For a configuration that is identical except that </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*max_batch_size*</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">equal to 0, the shape of "input0" is [ 16 ] and the shape of "output0"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">is [ 4 ].</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  platform: "tensorrt_plan"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  max_batch_size: 0</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  input [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      name: "input0"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      dims: [ 16 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  output [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      name: "output0"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      dims: [ 4 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For models that support input and output tensors with variable-size</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">dimensions, those dimensions can be listed as -1 in the input and</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">output configuration. For example, if a model requires a 2-dimensional</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input tensor where the first dimension must be size 4 but the second</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">dimension can be any size, the model configuration for that input</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">would include </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*dims: [ 4, -1 ]*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">. Triton would then accept inference</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">requests where that input tensor's second dimension was any value</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">greater-or-equal-to 0. The model configuration can be more restrictive</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">than what is allowed by the underlying model. For example, even though</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the framework model itself allows the second dimension to be any size,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the model configuration could be specified as </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*dims: [ 4, 4 ]*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">. In</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">this case, Triton would only accept inference requests where the input</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">tensor's shape was exactly </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*[ 4, 4 ]*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The [</span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*reshape*</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline"> property</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#reshape</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) must be used if there is a mismatch</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">between the input shape that Triton receives in an inference request</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">and the input shape expected by the model. Similarly, the </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*reshape*</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">property must be used if there is a mismatch between the output shape</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">produced by the model and the shape that Triton returns in a response</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">to an inference request.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Model inputs can specify </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`allow_ragged_batch`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> to indicate that the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input is a [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">ragged input</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">ragged_batching.md#ragged-batching</span><span style="color:#24292E;--shiki-dark:#E1E4E8">). The field is</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">used with [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">dynamic batcher</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#dynamic-batcher</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) to allow batching without</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">enforcing the input to have the same shape in all requests.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Auto-Generated Model Configuration</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The model configuration file containing the required</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">settings must be available with each model to be deployed</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">on Triton. In some cases the required portions of the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configuration can be generated automatically by Triton. The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">required portion of the model configuration are the settings</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">shown in the [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Minimal Model Configuration</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#minimal-model-configuration</span><span style="color:#24292E;--shiki-dark:#E1E4E8">).</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">By default, Triton will try to complete these sections. However,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">by starting Triton with </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`--disable-auto-complete-config`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> option,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton can be configured to not auto-complete model configuration</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">on the backend side. However, even with this option Triton will</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">fill in missing [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`instance_group`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#instance-groups</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) settings with</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">default values.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton can derive all the required settings automatically for</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">most of the TensorRT, TensorFlow saved-model, ONNX models, and OpenVINO models.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For Python models, [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`auto_complete_config`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/python_backend/#auto_complete_config</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">function can be implemented in Python backend to provide</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`max_batch_size`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#maximum-batch-size</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`input`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#inputs-and-outputs</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">and [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`output`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#inputs-and-outputs</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) properties using </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`set_max_batch_size`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">`add_input`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, and </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`add_output`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> functions. These properties will allow Triton</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">to load the Python model with [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Minimal Model Configuration</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#minimal-model-configuration</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">in absence of a configuration file.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">All other model types </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*must*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> provide a model configuration file.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">When developing a custom backend, you can populate required settings</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">in the configuration and call </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`TRITONBACKEND_ModelSetConfig`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> API to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">update completed configuration with Triton core. You can take a</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">look at [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">TensorFlow</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/tensorflow_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">and [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Onnxruntime</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/onnxruntime_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backends as examples of how to achieve this. Currently, only</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">inputs, outputs</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#inputs-and-outputs</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">max_batch_size</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#maximum-batch-size</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">and [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">dynamic batching</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#dynamic-batcher</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) settings can be populated by</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backend. For custom backends, your config.pbtxt file must</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">include a </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`backend`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> field or your model name must be in the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">form </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`&#x3C;model_name>.&#x3C;backend_name>`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">You can also see the model configuration generated for a model by</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton using the [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">model configuration endpoint</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">../protocol/extension_model_configuration.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">). The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">easiest way to do this is to use a utility like </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*curl*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">$</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> curl</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> localhost:8000/v2/models/</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#032F62;--shiki-dark:#9ECBFF">model</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> nam</span><span style="color:#24292E;--shiki-dark:#E1E4E8">e</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#032F62;--shiki-dark:#9ECBFF">/config</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">This will return a JSON representation of the generated model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configuration. From this you can take the max_batch_size, inputs, and</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">outputs sections of the JSON and convert it to a config.pbtxt file.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton only generates the [minimal portion of the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configuration](#minimal-model-configuration). You must still provide</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the optional portions of the model configuration by editing the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">config.pbtxt file.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Default Max Batch Size and Dynamic Batcher</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">When a model is using the auto-complete feature, a default maximum</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batch size may be set by using the </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`--backend-config=default-max-batch-size=&#x3C;int>`</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">command line argument. This allows all models which are capable of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batching and which make use of [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Auto Generated Model Configuration</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#auto-generated-model-configuration</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">to have a default maximum batch size. This value is set to 4 by</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">default. Backend developers may make use of this default-max-batch-size</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">by obtaining it from the TRITONBACKEND_BackendConfig api. Currently, the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">following backends which utilize these default batch values and turn on</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">dynamic batching in their generated model configurations are:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">1.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">TensorFlow backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/tensorflow_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">2.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Onnxruntime backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/onnxruntime_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">3.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">TensorRT backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/tensorrt_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">   1.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> TensorRT models store the maximum batch size explicitly and do not make use</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">   of the default-max-batch-size parameter. However, if max_batch_size > 1</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">   and no [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">model_configuration.md#scheduling-and-batching</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">   is provided, the dynamic batch scheduler will be enabled.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">If a value greater than 1 for the maximum batch size is set for the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model, the [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">dynamic_batching</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#dynamic-batcher</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) config will be set</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">if no scheduler is provided in the configuration file.</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Datatypes</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The following table shows the tensor datatypes supported by</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton. The first column shows the name of the datatype as it appears</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">in the model configuration file. The next four columns show the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">corresponding datatype for supported model frameworks. If a model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">framework does not have an entry for a given datatype, then Triton</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">does not support that datatype for that model. The sixth column,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">labeled "API", shows the corresponding datatype for the TRITONSERVER C</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">API, TRITONBACKEND C API, HTTP/REST protocol and GRPC protocol. The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">last column shows the corresponding datatype for the Python numpy</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">library.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|Model Config  |TensorRT      |TensorFlow    |ONNX Runtime  |PyTorch  |API      |NumPy         |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|--------------|--------------|--------------|--------------|---------|---------|--------------|</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|TYPE_BOOL     | kBOOL        |DT_BOOL       |BOOL          |kBool    |BOOL     |bool          |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|TYPE_UINT8    | kUINT8       |DT_UINT8      |UINT8         |kByte    |UINT8    |uint8         |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|TYPE_UINT16   |              |DT_UINT16     |UINT16        |         |UINT16   |uint16        |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|TYPE_UINT32   |              |DT_UINT32     |UINT32        |         |UINT32   |uint32        |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|TYPE_UINT64   |              |DT_UINT64     |UINT64        |         |UINT64   |uint64        |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|TYPE_INT8     | kINT8        |DT_INT8       |INT8          |kChar    |INT8     |int8          |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|TYPE_INT16    |              |DT_INT16      |INT16         |kShort   |INT16    |int16         |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|TYPE_INT32    | kINT32       |DT_INT32      |INT32         |kInt     |INT32    |int32         |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|TYPE_INT64    |              |DT_INT64      |INT64         |kLong    |INT64    |int64         |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|TYPE_FP16     | kHALF        |DT_HALF       |FLOAT16       |         |FP16     |float16       |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|TYPE_FP32     | kFLOAT       |DT_FLOAT      |FLOAT         |kFloat   |FP32     |float32       |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|TYPE_FP64     |              |DT_DOUBLE     |DOUBLE        |kDouble  |FP64     |float64       |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|TYPE_STRING   |              |DT_STRING     |STRING        |         |BYTES    |dtype(object) |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|TYPE_BF16     |              |              |              |         |BF16     |              |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For TensorRT each value is in the nvinfer1::DataType namespace. For</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">example, nvinfer1::DataType::kFLOAT is the 32-bit floating-point</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">datatype.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For TensorFlow each value is in the tensorflow namespace. For example,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">tensorflow::DT_FLOAT is the 32-bit floating-point value.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For ONNX Runtime each value is prepended with ONNX_TENSOR_ELEMENT_DATA_TYPE_.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For example, ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT is the 32-bit floating-point</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">datatype.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For PyTorch each value is in the torch namespace. For example, torch::kFloat</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">is the 32-bit floating-point datatype.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For Numpy each value is in the numpy module. For example, numpy.float32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">is the 32-bit floating-point datatype.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Reshape</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*ModelTensorReshape*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property on a model configuration input or</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">output is used to indicate that the input or output shape accepted by</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the inference API differs from the input or output shape expected or</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">produced by the underlying framework model or custom backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For an input, </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*reshape*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> can be used to reshape the input tensor to a</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">different shape expected by the framework or backend. A common</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">use-case is where a model that supports batching expects a batched</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input to have shape </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*[ batch-size ]*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, which means that the batch</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">dimension fully describes the shape. For the inference API the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">equivalent shape </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*[ batch-size, 1 ]*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> must be specified since each</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input must specify a non-empty </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*dims*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">. For this case the input should</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">be specified as:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  input [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      name: "in"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      dims: [ 1 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      reshape: { shape: [ ] }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For an output, </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*reshape*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> can be used to reshape the output tensor</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">produced by the framework or backend to a different shape that is</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">returned by the inference API. A common use-case is where a model that</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">supports batching expects a batched output to have shape *[ batch-size</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]*, which means that the batch dimension fully describes the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">shape. For the inference API the equivalent shape </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*[ batch-size, 1 ]*</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">must be specified since each output must specify a non-empty</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*dims*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">. For this case the output should be specified as:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  output [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      name: "in"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      dims: [ 1 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      reshape: { shape: [ ] }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Shape Tensors</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For models that support shape tensors, the </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*is_shape_tensor*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">must be set appropriately for inputs and outputs that are acting as</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">shape tensors. The following shows an example configuration that</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">specifies shape tensors.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  name: "myshapetensormodel"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  platform: "tensorrt_plan"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  max_batch_size: 8</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  input [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      name: "input0"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      dims: [ 1 , 3]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    },</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      name: "input1"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      data_type: TYPE_INT32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      dims: [ 2 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      is_shape_tensor: true</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  output [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      name: "output0"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      dims: [ 1 , 3]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">As discussed above, Triton assumes that batching occurs along the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">first dimension which is not listed in in the input or output tensor</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*dims*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">. However, for shape tensors, batching occurs at the first shape</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">value. For the above example, an inference request must provide inputs</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">with the following shapes.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  "input0": [ x, 1, 3]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  "input1": [ 3 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  "output0": [ x, 1, 3]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Where </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*x*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> is the batch size of the request. Triton requires the shape</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">tensors to be marked as shape tensors in the model when using</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batching. Note that "input1" has shape </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*[ 3 ]*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> and not </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*[ 2 ]*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, which</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">is how it is described in model configuration. As </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`myshapetensormodel`</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model is a batching model, the batch size should be provided as an</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">additional value. Triton will accumulate all the shape values together</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">for "input1" in batch dimension before issuing the request to model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For example, assume the client sends following three requests to Triton</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">with following inputs:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Request1:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input0: [[[1,2,3]]] &#x3C;== shape of this tensor [1,1,3]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input1: [1,4,6] &#x3C;== shape of this tensor [3]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Request2:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input0: [[[4,5,6]], [[7,8,9]]] &#x3C;== shape of this tensor [2,1,3]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input1: [2,4,6] &#x3C;== shape of this tensor [3]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Request3:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input0: [[[10,11,12]]] &#x3C;== shape of this tensor [1,1,3]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input1: [1,4,6] &#x3C;== shape of this tensor [3]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Assuming these requests get batched together would be delivered to the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model as:</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Batched Requests to model:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input0: [[[1,2,3]], [[4,5,6]], [[7,8,9]], [[10,11,12]]] &#x3C;== shape of this tensor [4,1,3]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input1: [4, 4, 6] &#x3C;== shape of this tensor [3]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Currently, only TensorRT supports shape tensors. Read [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Shape Tensor I/O</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://docs.nvidia.com/deeplearning/tensorrt/developer-guide/index.html#shape_tensor_io</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">to learn more about shape tensors.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Version Policy</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Each model can have one or more</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">versions</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">model_repository.md#model-versions</span><span style="color:#24292E;--shiki-dark:#E1E4E8">). The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*ModelVersionPolicy*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property of the model configuration is used to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">set one of the following policies.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic"> *All*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: All versions of the model that are available in the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  repository are available for inferencing.</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  ```version_policy: { all: {}}```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic"> *Latest*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: Only the latest ‘n’ versions of the model in the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  repository are available for inferencing. The latest versions of the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  model are the numerically greatest version numbers.</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  ```version_policy: { latest: { num_versions: 2}}```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic"> *Specific*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: Only the specifically listed versions of the model are</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  available for inferencing.</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  ```version_policy: { specific: { versions: [1,3]}}```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">If no version policy is specified, then </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*Latest*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (with n=1) is used as</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the default, indicating that only the most recent version of the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">is made available by Triton. In all cases, the [addition or removal of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">version subdirectories](model_management.md) from the model repository</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">can change which model version is used on subsequent inference</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">requests.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The following configuration specifies that all versions of the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">will be available from the server.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  platform: "tensorrt_plan"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  max_batch_size: 8</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  input [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      name: "input0"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      dims: [ 16 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    },</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      name: "input1"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      dims: [ 16 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  output [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      name: "output0"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      dims: [ 16 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  version_policy: { all { }}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Instance Groups</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton can provide multiple [instances of a</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model](architecture.md#concurrent-model-execution) so that multiple</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">inference requests for that model can be handled simultaneously. The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model configuration </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*ModelInstanceGroup*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property is used to specify</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the number of execution instances that should be made available and</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">what compute resource should be used for those instances.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Multiple Model Instances</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">By default, a single execution instance of the model is created for</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">each GPU available in the system. The instance-group setting can be</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">used to place multiple execution instances of a model on every GPU or</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">on only certain GPUs. For example, the following configuration will</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">place two execution instances of the model to be available on each</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">system GPU.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  instance_group [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      count: 2</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      kind: KIND_GPU</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">And the following configuration will place one execution instance on</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">GPU 0 and two execution instances on GPUs 1 and 2.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  instance_group [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      count: 1</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      kind: KIND_GPU</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      gpus: [ 0 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    },</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      count: 2</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      kind: KIND_GPU</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      gpus: [ 1, 2 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For a more detailed example of using instance groups, see</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">this guide</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/tutorials/tree/main/Conceptual_Guide/Part_2-improving_resource_utilization#concurrent-model-execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8">).</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### CPU Model Instance</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The instance group setting is also used to enable execution of a model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">on the CPU. A model can be executed on the CPU even if there is a GPU</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">available in the system. The following places two execution instances</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">on the CPU.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  instance_group [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      count: 2</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      kind: KIND_CPU</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">If no </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`count`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> is specified for a KIND_CPU instance group, then the default instance</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">count will be 2 for selected backends (Tensorflow and Onnxruntime). All</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">other backends will default to 1.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Host Policy</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The instance group setting is associated with a host policy. The following</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configuration will associate all instances created by the instance group setting</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">with host policy "policy_0". By default the host policy will be set according to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the device kind of the instance, for instance, KIND_CPU is "cpu", KIND_MODEL is</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">"model", and KIND_GPU is "gpu_\&#x3C;gpu_id</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\></span><span style="color:#24292E;--shiki-dark:#E1E4E8">".</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  instance_group [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      count: 2</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      kind: KIND_CPU</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      host_policy: "policy_0"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Rate Limiter Configuration</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Instance group optionally specifies [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">rate limiter</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">rate_limiter.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configuration which controls how the rate limiter operates on the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">instances in the group. The rate limiter configuration is ignored if</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">rate limiting is off. If rate limiting is on and if an instance_group</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">does not provide this configuration, then the execution on the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">instances belonging to this group will not be limited in any way by</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the rate limiter. The configuration includes the following</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">specifications:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### Resources</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The set of [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">resources</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">rate_limiter.md#resources</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) required to execute</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">a model instance. The "name" field identifies the resource and "count"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">field refers to the number of copies of the resource that the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">instance in the group requires to run. The "global" field specifies</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">whether the resource is per-device or shared globally across the system.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Loaded models can not specify a resource with the same name both as global</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">and non-global. If no resources are provided then triton assumes the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">execution of model instance does not require any resources and will</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">start executing as soon as model instance is available.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### Priority</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Priority serves as a weighting value to be used for prioritizing across</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">all the instances of all the models. An instance with priority 2 will be</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">given 1/2 the number of scheduling chances as an instance with priority</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">1.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The following example specifies the instances in the group requires</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">four "R1" and two "R2" resources for execution. Resource "R2" is a global</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">resource. Additionally, the rate-limiter priority of the instance_group</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">is 2.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  instance_group [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      count: 1</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      kind: KIND_GPU</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      gpus: [ 0, 1, 2 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      rate_limiter {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        resources [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            name: "R1"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            count: 4</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          },</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            name: "R2"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            global: True</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            count: 2</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        priority: 2</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The above configuration creates 3 model instances, one on each device</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">(0, 1 and 2). The three instances will not contend for "R1" among</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">themselves as "R1" is local for their own device, however, they will</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">contend for "R2" because it is specified as a global resource which</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">means "R2" is shared across the system. Though these instances don't</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">contend for "R1" among themsleves, but they will contend for "R1"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">with other model instances which includes "R1" in their resource</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">requirements and run on the same device as them.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Ensemble Model Instance Groups</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Ensemble models</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">architecture.md#ensemble-models</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">are an abstraction Triton uses to execute a user-defined pipeline of models.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Since there is no physical instance associated with an ensemble model, the</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">`instance_group`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> field can not be specified for it.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">However, each composing model that makes up an ensemble can specify</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">`instance_group`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> in its config file and individually support parallel</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">execution as described above when the ensemble receives multiple requests.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## CUDA Compute Capability</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Similar to the </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`default_model_filename`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> field, you can optionally specify the</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">`cc_model_filenames`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> field to map the GPU's</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">CUDA Compute Capability</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://developer.nvidia.com/cuda-gpus</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">to a corresponding model filename at model load time. This is particularly</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">useful for TensorRT models, since they are generally tied to a specific</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">compute capability.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">cc_model_filenames [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    key: "7.5"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    value: "resnet50_T4.plan"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  },</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    key: "8.0"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    value: "resnet50_A100.plan"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Scheduling And Batching</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton supports batch inferencing by allowing individual inference</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">requests to specify a batch of inputs. The inferencing for a batch of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">inputs is performed at the same time which is especially important for</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">GPUs since it can greatly increase inferencing throughput. In many use</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">cases the individual inference requests are not batched, therefore,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">they do not benefit from the throughput benefits of batching.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The inference server contains multiple scheduling and batching</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">algorithms that support many different model types and use-cases. More</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">information about model types and schedulers can be found in [Models</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">And Schedulers](architecture.md#models-and-schedulers).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Default Scheduler</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The default scheduler is used for a model if none of the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*scheduling_choice*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> properties are specified in the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configuration. The default scheduler simply distributes inference</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">requests to all [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">model instances</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#instance-groups</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) configured for the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Dynamic Batcher</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Dynamic batching is a feature of Triton that allows inference requests</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">to be combined by the server, so that a batch is created</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">dynamically. Creating a batch of requests typically results in</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">increased throughput. The dynamic batcher should be used for</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">stateless models</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">architecture.md#stateless-models</span><span style="color:#24292E;--shiki-dark:#E1E4E8">). The dynamically created</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batches are distributed to all [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">model instances</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#instance-groups</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configured for the model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Dynamic batching is enabled and configured independently for each</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model using the </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*ModelDynamicBatching*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property in the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configuration. These settings control the preferred size(s) of the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">dynamically created batches, the maximum time that requests can be</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">delayed in the scheduler to allow other requests to join the dynamic</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batch, and queue properties such a queue size, priorities, and</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">time-outs. Refer to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">this guide</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/tutorials/tree/main/Conceptual_Guide/Part_2-improving_resource_utilization#what-is-dynamic-batching</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">for a more detailed example of dynamic batching.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### Recommended Configuration Process</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The individual settings are described in detail below. The following</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">steps are the recommended process for tuning the dynamic batcher for</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">each model. It is also possible to use the [Model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Analyzer](model_analyzer.md) to automatically search across different</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">dynamic batcher configurations.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Decide on a [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">maximum batch size</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#maximum-batch-size</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) for the model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Add the following to the model configuration to enable the dynamic</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  batcher with all default settings. By default the dynamic batcher</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  will create batches as large as possible up to the maximum batch</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  size and will not [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">delay</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#delayed-batching</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) when forming batches.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  dynamic_batching { }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Use the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Performance Analyzer</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/client/blob/main/src/c++/perf_analyzer/README.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  to determine the latency and throughput provided by the default dynamic</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  batcher configuration.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> If the default configuration results in latency values that are</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  within your latency budget, try one or both of the following to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  trade off increased latency for increased throughput:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Increase maximum batch size.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Set [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">batch delay</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#delayed-batching</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) to a non-zero value. Try</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    increasing delay values until the latency budget is exceeded to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    see the impact on throughput.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Preferred batch sizes</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#preferred-batch-sizes</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) should not be used</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  for most models. A preferred batch size(s) should only be configured</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  if that batch size results in significantly higher performance than</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  other batch sizes.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### Preferred Batch Sizes</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*preferred_batch_size*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property indicates the batch sizes that the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">dynamic batcher should attempt to create. For most models,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*preferred_batch_size*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> should not be specified, as described in</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[Recommended Configuration</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Process](#recommended-configuration-process). An exception is TensorRT</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">models that specify multiple optimization profiles for different batch</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sizes. In this case, because some optimization profiles may give</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">significant performance improvement compared to others, it may make</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sense to use </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*preferred_batch_size*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> for the batch sizes supported by</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">those higher-performance optimization profiles.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The following example shows the configuration that enables dynamic</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batching with preferred batch sizes of 4 and 8.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  dynamic_batching {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    preferred_batch_size: [ 4, 8 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">When a model instance becomes available for inferencing, the dynamic</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batcher will attempt to create batches from the requests that are</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">available in the scheduler. Requests are added to the batch in the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">order the requests were received. If the dynamic batcher can form a</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batch of a preferred size(s) it will create a batch of the largest</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">possible preferred size and send it for inferencing. If the dynamic</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batcher cannot form a batch of a preferred size (or if the dynamic</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batcher is not configured with any preferred batch sizes), it will</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">send a batch of the largest size possible that is less than the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">maximum batch size allowed by the model (but see the following section</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">for the delay option that changes this behavior).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The size of generated batches can be examined in aggregate using</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">count metrics</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">metrics.md#inference-request-metrics</span><span style="color:#24292E;--shiki-dark:#E1E4E8">).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### Delayed Batching</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The dynamic batcher can be configured to allow requests to be delayed</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">for a limited time in the scheduler to allow other requests to join</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the dynamic batch. For example, the following configuration sets the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">maximum delay time of 100 microseconds for a request.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  dynamic_batching {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    max_queue_delay_microseconds: 100</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*max_queue_delay_microseconds*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property setting changes the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">dynamic batcher behavior when a maximum size (or preferred size) batch</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">cannot be created. When a batch of a maximum or preferred size cannot</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">be created from the available requests, the dynamic batcher will delay</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sending the batch as long as no request is delayed longer than the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configured </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*max_queue_delay_microseconds*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> value. If a new request</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">arrives during this delay and allows the dynamic batcher to form a</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batch of a maximum or preferred batch size, then that batch is sent</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">immediately for inferencing. If the delay expires the dynamic batcher</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sends the batch as is, even though it is not a maximum or preferred</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">size.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### Preserve Ordering</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*preserve_ordering*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property is used to force all responses to be</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">returned in the same order as requests were received. See the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[protobuf</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">documentation](https://github.com/triton-inference-server/common/blob/main/protobuf/model_config.proto)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">for details.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### Priority Levels</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">By default the dynamic batcher maintains a single queue that holds all</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">inference requests for a model. The requests are processed and batched</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">in order.  The </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*priority_levels*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property can be used to create</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">multiple priority levels within the dynamic batcher so that requests</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">with higher priority are allowed to bypass requests with lower</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">priority. Requests at the same priority level are processed in</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">order. Inference requests that do not set a priority are scheduled</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">using the </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*default_priority_level*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### Queue Policy</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The dynamic batcher provides several settings that control how</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">requests are queued for batching.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">When </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*priority_levels*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> is not defined, the </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*ModelQueuePolicy*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> for the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">single queue can be set with </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*default_queue_policy*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.  When</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*priority_levels*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> is defined, each priority level can have a different</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*ModelQueuePolicy*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> as specified by </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*default_queue_policy*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> and </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*priority_queue_policy*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*ModelQueuePolicy*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property allows a maximum queue size to be set</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">using the </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*max_queue_size*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">. The </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*timeout_action*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*default_timeout_microseconds*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> and </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*allow_timeout_override*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> settings</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">allow the queue to be configured so that individual requests are</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">rejected or deferred if their time in the queue exceeds a specified</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">timeout.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### Custom Batching</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">You can set custom batching rules that work </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">_in addition to_</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> the specified behavior of the dynamic batcher.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">To do so, you would implement five functions in [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">tritonbackend.h</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/core/blob/main/include/triton/core/tritonbackend.h</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">and create a shared library. These functions are described below.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| Function | Description|</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| :--          |   :--           |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| TRITONBACKEND_ModelBatchIncludeRequest | Determines whether a request should be included in the current batch |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| TRITONBACKEND_ModelBatchInitialize | Initializes a record-keeping data structure for a new batch |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| TRITONBACKEND_ModelBatchFinalize | Deallocates the record-keeping data structure after a batch is formed |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| TRITONBACKEND_ModelBatcherInitialize | Initializes a read-only data structure for use with all batches |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| TRITONBACKEND_ModelBatcherFinalize | Deallocates the read-only data structure after the model is unloaded |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The path to the shared library can be passed into the model configuration via the parameter</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">`TRITON_BATCH_STRATEGY_PATH`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">. If not provided, the dynamic batcher will look for a custom</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batching strategy named batchstrategy.so in the model version, model, and backend directories,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">in that order. If found, it will load it. This lets you easily share a custom batching strategy</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">among all models using the same backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For a tutorial of how to create and use a custom batching library, please see the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">backend examples directory</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/backend/tree/main/examples#volume-batching</span><span style="color:#24292E;--shiki-dark:#E1E4E8">).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Sequence Batcher</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Like the dynamic batcher, the sequence batcher combines non-batched</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">inference requests, so that a batch is created dynamically. Unlike the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">dynamic batcher, the sequence batcher should be used for</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">stateful models</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">architecture.md#stateful-models</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) where a sequence of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">inference requests must be routed to the same model instance. The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">dynamically created batches are distributed to all [model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">instances](#instance-groups) configured for the model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Sequence batching is enabled and configured independently for each</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model using the </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*ModelSequenceBatching*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property in the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configuration. These settings control the sequence timeout as well as</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configuring how Triton will send control signals to the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">indicating sequence start, end, ready and correlation ID. See</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Stateful Models</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">architecture.md#stateful-models</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) for more</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">information and examples.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### Iterative Sequences</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#22863A;--shiki-dark:#85E89D">> [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">!NOTE</span><span style="color:#22863A;--shiki-dark:#85E89D">]</span></span>
+<span class="line"><span style="color:#22863A;--shiki-dark:#85E89D">> Iterative sequences are </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*provisional*</span><span style="color:#22863A;--shiki-dark:#85E89D"> and likely to change in future versions.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The sequence batcher supports stateful execution of "iterative</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sequences" where a single request is processed over a number of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">scheduling iterations. "Iterative sequences" enable the scheduler to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batch multiple inflight requests at each step and allow the model or</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backend to complete a request at any iteration.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For models and backends that support "iterative sequences", users can</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">enable support in the sequence batcher by specifying:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  sequence_batching {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    iterative_sequence: true</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">An "iterative sequence" refers to stateful models that iteratively</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">process a single request until a complete response is generated.  When</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">iterative sequence is enabled, the sequence scheduler will expect a</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">single incoming request to initiate the sequence. Backends that</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">support iterative sequences can then yield back to the sequence</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batcher to reschedule the request for further execution in a future</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batch.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Because only one request is used to represent the "iterative</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sequence", the user doesn't need to set [control</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">inputs](architecture.md#control-inputs) mentioned in the previous</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">section. They will be filled internally by the scheduler.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">"Iterative sequences" can be [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">decoupled</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#decoupled</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) where more than</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">one response can be generated during execution or non-decoupled where</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">a single response is generated when the full response is complete.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The main advantage of "iterative sequences" is the ability to use</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton's native batching capabilities to form batches of requests at</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">different iteration stages without having to maintain additional state</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">in the backend. Typically batches executed by backends are completed</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">in the same execution which can waste resources if the execution of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">one of the requests in the batch takes much longer than the rest. With</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">"iterative sequences", processing for each request in a batch can be</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">broken down into multiple iterations and a backend can start</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">processing new requests as soon as any request is complete.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">##### Continuous/Inflight Batching with Iterative Sequences</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Continuous batching, iteration level batching, and inflight batching</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">are terms used in large language model (LLM) inferencing to describe</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batching strategies that form batches of requests at each iteration</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">step. By forming batches "continuously" inference servers can increase</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">throughput by reusing batch slots as soon as they are free without</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">waiting for all requests in a batch to complete.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">As the number of steps required to process a request can vary</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">significantly, batching existing requests and new requests continuously</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">can have a significant improvement on throughput and latency.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">To achieve inflight batching with iterative sequences, the backend</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">should break request processing into a number of steps, where each</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">step corresponds to one Triton model instance execution. At the end of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">each step, the model instance will release requests that have been</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">completed and reschedule requests that are still inflight. Triton will</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">then form and schedule the next batch of requests that mixes new and</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">rescheduled requests.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Ensemble Scheduler</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The ensemble scheduler must be used for [ensemble</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"> models](architecture.md#ensemble-models) and cannot be used for any</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"> other type of model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The ensemble scheduler is enabled and configured independently for</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">each model using the </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*ModelEnsembleScheduling*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property in the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configuration. The settings describe the models that are included in</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the ensemble and the flow of tensor values between the models. See</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Ensemble Models</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">architecture.md#ensemble-models</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) for more</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">information and examples.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Optimization Policy</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The model configuration </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*ModelOptimizationPolicy*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property is used to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">specify optimization and prioritization settings for a model. These</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">settings control if/how a model is optimized by the backend and how it</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">is scheduled and executed by Triton. See the [ModelConfig</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">protobuf](https://github.com/triton-inference-server/common/blob/main/protobuf/model_config.proto)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">and [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">optimization</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">optimization.md#framework-specific-optimization</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">documentation for the currently available settings.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Model Warmup</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">When a model is loaded by Triton the corresponding</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/backend/blob/main/README.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">initializes for that model.  For some backends, some or all of this</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">initialization is deferred until the model receives its first</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">inference request (or first few inference requests). As a result, the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">first (few) inference requests can be significantly slower due to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">deferred initialization.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">To avoid these initial, slow inference requests, Triton provides a</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configuration option that enables a model to be "warmed up" so that it</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">is completely initialized before the first inference request is</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">received. When the </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*ModelWarmup*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> property is defined in a model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configuration, Triton will not show the model as being ready for</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">inference until model warmup has completed.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The model configuration </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*ModelWarmup*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> is used to specify warmup</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">settings for a model. The settings define a series of inference</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">requests that Triton will create to warm-up each model instance. A</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model instance will be served only if it completes the requests</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">successfully.  Note that the effect of warming up models varies</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">depending on the framework backend, and it will cause Triton to be</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">less responsive to model update, so the users should experiment and</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">choose the configuration that suits their need. See the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">ModelWarmup protobuf</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/common/blob/main/protobuf/model_config.proto</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">documentation for the currently available settings, and</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">L0_warmup</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/server/blob/main/qa/L0_warmup/test.sh</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">for examples on specifying different variants of warmup samples.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Response Cache</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The model configuration </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`response_cache`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> section has an </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`enable`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> boolean used to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">enable the Response Cache for this model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">response_cache {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  enable: true</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">In addition to enabling the cache in the model config, a </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`--cache-config`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> must</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">be specified when starting the server to enable caching on the server-side. See</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Response Cache</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">response_cache.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) doc for more details on enabling</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">server-side caching.</span></span>
+<span class="line"></span></code></pre>

@@ -1,0 +1,7 @@
+---
+import Link from 'reify/components/Link.astro';
+const {kind}=Astro.props;
+---
+<div class="code-actions">
+  {kind==='plan'?<><a class="download-button" href="batch_plan.py" download="batch_plan.py">下载可运行的切片算法</a><span>纯 Python；断言覆盖守恒、连续区间与结果还原。</span></>:<><button id="download-client">下载原始 client.py</button><Link href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/_reference/tritonclient/tritonclient.http.html" target="_blank" rel="noreferrer">HTTP SDK 契约</Link></>}
+</div>

@@ -1,0 +1,6 @@
+<div class="demo" id="runtime-demo">
+  <div class="demo-title">执行资源与运行状态</div>
+  <div class="controls">{['H','D','P'].map((label,i)=><label>{label}<input id={label.toLowerCase()} type="number" min="1" max={[16,8,8][i]} value="2"/></label>)}<label>K 覆盖<select id="k"><option value="0">自动</option>{[1,2,4,8].map(n=><option value={n}>{n}</option>)}</select></label><span id="resource-count"/></div>
+  <div class="stage-buttons" role="group" aria-label="运行阶段">{['模型加载','已就绪 / 无请求','一次处理执行中','响应完成','卸载路径'].map((text,i)=><button data-phase={['load','idle','run','done','unload'][i]}>{text}</button>)}</div>
+  <div id="runtime-state" aria-live="polite"/>
+</div>

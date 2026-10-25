@@ -1,0 +1,84 @@
+# 运行时张量与内存所有权
+
+<Annotations notes={{
+  origin:"调用方模型语义中的原始 shape。",
+  storage:"Tensor 计算形状大小时使用的 storage shape；不能无条件用 origin shape 替代。",
+  format:"StorageFormat，对应 Tensor::storage_format_。",
+  data:"TensorData，对应 Tensor::tensor_data_。",
+  placement:"TensorData 的数据存储位置属性。"
+}} />
+
+<Lead>
+
+`gert::Tensor`、StorageShape / StorageFormat 与 TensorData 是 [GE 执行接口](ge.html#execute)中输入输出描述的实际结构。
+
+</Lead>
+
+<Scope>
+
+覆盖调用方需要的运行时张量；[ComputeGraph / Node / Anchor](ge.html#objects) 属于图结构。
+
+</Scope>
+
+<Section id="tensor">
+
+## 1\. 数据模型
+
+$$
+\begin{aligned}
+T&=(S,F,\tau,\storage{D})\\
+S&=(\annotate{origin}{\logical{s_{\mathrm{origin}}}},\annotate{storage}{\storage{s_{\mathrm{storage}}}})\\
+\annotate{format}{F}&=(\logical{f_{\mathrm{origin}}},\storage{f_{\mathrm{storage}}},\mathrm{expand\_desc})\\
+\annotate{data}{\storage{D}}&=(\mathrm{addr},\mathrm{byte\_size},\annotate{placement}{\mathrm{placement}},\mathrm{manager})\\
+\storage{L_{\mathrm{storage}}}&=\mathrm{sizeof}(\tau)\prod_i\storage{s_{\mathrm{storage},i}}
+\end{aligned}
+$$
+
+<CodeBlock language="cpp" code={`
+class Tensor {
+  StorageShape storage_shape_;
+  StorageFormat storage_format_;
+  DataType data_type_;
+  TensorData tensor_data_;
+};
+
+Tensor(StorageShape, StorageFormat, TensorPlacement, DataType, void* addr);
+`.trim()} notes={{"Tensor(StorageShape, StorageFormat, TensorPlacement, DataType, void* addr)":"此构造器将 TensorData 的 manager 置为 nullptr，析构时不释放外部 buffer。"}} />
+
+<Evidence ids="tensor_model" />
+
+</Section>
+
+<Section id="tensor-lifetime">
+
+## 2\. 缓冲区所有权与释放条件
+
+```cpp
+TensorData::~TensorData() → Free()
+Free() → manager_ == nullptr ? SUCCESS
+                            : manager_(addr_, kFreeTensor, nullptr)
+```
+
+[Triton 后端](index.html#model)把自己申请的 HBM 地址包装进 Tensor，仍须自行保证设备最后一次访问结束后才释放。GE 也可能返回带 manager 的数据，不能仅凭类型名判断 owning / non-owning。
+
+$$
+\begin{aligned}
+\mathrm{lifetime}(\logical{\mathrm{descriptor}})&\ne\mathrm{lifetime}(\storage{\mathrm{external\ buffer}})\\
+\mathrm{free}(b)&\Rightarrow\device{\mathrm{Completed}(\mathrm{all\ device\ accesses\ to}\ b)}
+\end{aligned}
+$$
+
+完成条件来自执行方的<TextNote href="runtime.html#stream" desc="同步成功覆盖对应 stream 的既有工作及已建立的工作关系。">stream 同步</TextNote>或任务同步，不取决于 Tensor 对象是否离开 C++ 作用域。
+
+<Evidence ids="tensor_buffer_lifetime" />
+
+</Section>
+
+<Section>
+
+## 3\. 源码组织
+
+<Files repo="metadef" />
+
+</Section>
+

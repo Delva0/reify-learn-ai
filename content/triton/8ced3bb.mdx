@@ -1,0 +1,111 @@
+<CodeBlock
+  id="dynamic_batch_scheduler-385-443"
+  render={false}
+  src="https://github.com/triton-inference-server/core/blob/4c03bc361e65f7b6e90a74d2edc3a1282d264c32/src/dynamic_batch_scheduler.cc"
+  lines="385-443"
+  notes={[
+    {"at":{"line":403,"text":"AddRequest"},"desc":"payload 保留原请求对象；这里没有把输入 tensor 拼成一个新 tensor。"}
+  ]}
+  links={[
+    {"at":{"line":385,"text":"GetDynamicBatch"},"href":"?fp=code&block=dynamic_batch_scheduler-459-490-518-552-556-591"}
+  ]}
+/>
+
+<CodeBlock
+  id="dynamic_batch_scheduler-459-490-518-552-556-591"
+  render={false}
+  src="https://github.com/triton-inference-server/core/blob/4c03bc361e65f7b6e90a74d2edc3a1282d264c32/src/dynamic_batch_scheduler.cc"
+  lines="459-490,518-552,556-591"
+  notes={[
+    {"at":{"line":490,"text":"BatchSize"},"desc":"累加的是请求自身的 batch；请求对象数与总 batch 分开计算。"},
+    {"at":{"line":561,"text":"OldestEnqueueTime"},"desc":"等待预算从队列中最老请求的时间计算；它限制主动等待合批，并不保证整个请求在这个时间内完成。"}
+  ]}
+  marks={[
+    {"at":{"line":490,"text":"BatchSize"},"color":"amber"}
+  ]}
+/>
+
+<CodeBlock
+  id="model_configuration-810-827-840-899"
+  render={false}
+  src="docs/user_guide/model_configuration.md"
+  lines="810-827,840-899"
+/>
+
+<CodeBlock
+  id="readme-280-313"
+  render={false}
+  src="https://github.com/triton-inference-server/backend/blob/a06e9a1157d6b5b9b34b6d05a07bb84d517f17c9/README.md"
+  lines="280-313"
+/>
+
+<CodeBlock
+  id="backend_model_instance-669-693"
+  render={false}
+  src="https://github.com/triton-inference-server/core/blob/4c03bc361e65f7b6e90a74d2edc3a1282d264c32/src/backend_model_instance.cc"
+  lines="669-693"
+  notes={[
+    {"at":{"line":679,"text":"inst_exec_fn"},"desc":"调用所加载后端的 Execute 函数；参数仍是模型实例、原请求指针数组及数组长度。"}
+  ]}
+  links={[
+    {"at":{"line":679,"text":"inst_exec_fn"},"href":"?fp=code&block=npu_ge-165-182"}
+  ]}
+/>
+
+<CodeBlock
+  id="npu_ge-165-182"
+  render={false}
+  src="https://github.com/hicann/triton-inference-server-ge-backend/blob/cef0cc5e456f2d1cb0c04641a1eab6b5be8c16e4/src/npu_ge.cpp"
+  lines="165-182"
+/>
+
+<CodeBlock
+  id="backend_model-828-846"
+  render={false}
+  src="https://github.com/triton-inference-server/core/blob/4c03bc361e65f7b6e90a74d2edc3a1282d264c32/src/backend_model.cc"
+  lines="828-846"
+/>
+
+<CodeBlock
+  id="inference-1454-1479"
+  render={false}
+  src="https://github.com/hicann/triton-inference-server-ge-backend/blob/cef0cc5e456f2d1cb0c04641a1eab6b5be8c16e4/src/inference.cpp"
+  lines="1454-1479"
+/>
+
+# 在线请求怎样组织成执行工作
+
+<Section id="request-scheduling">
+
+设备执行资源已经准备好，在线服务接下来面对的是持续到达的请求。Triton 为模型安排请求队列、合批和模型实例调用；后端执行交来的工作。Triton 的 server 仓库包含服务入口与配置文档，下面的调度和实例执行源码位于同版本的 core 组件。
+
+## 请求 batch 与一次调用的总 batch
+
+设三个兼容请求的 batch 分别为 2、1、1，队列允许合批到 4，且有模型实例可用。Triton 可以把它们作为一组交给后端：`request_count=3`，总 batch=4。[组装 payload 的实现](?fp=code&block=dynamic_batch_scheduler-385-443)保留三个原请求对象；输入张量的实际拼接与响应还原由后端完成。
+
+这组请求只占用一次模型实例的 Execute 调用；它在设备上使用几个图、几条 stream，由具体后端决定。本仓 `npu_ge` 的执行资源池与 Triton 的模型实例因此需要分别理解。
+
+## 合批在计算效率与等待之间取舍
+
+令 $T(B)$ 为单份 batch 为 $B$ 的工作在所选执行方式下的耗时，则样本吞吐为：
+
+$$
+\request{\mu(B)}=\frac{B}{T(B)},\qquad
+T(B)<B T(1)\ \Rightarrow\ \mu(B)>\mu(1)
+$$
+
+合批有收益需要满足右侧条件。为攒大 batch 而等待会增加排队时间，因此 [动态 batch 配置](?fp=code&block=model_configuration-810-827-840-899)同时提供最大 batch、可选偏好大小和等待预算。低流量时队列可能凑不齐偏好大小；预算用尽或无法继续增长时，调度器可以发送当前可执行的 batch。
+
+[GetDynamicBatch](?fp=code&block=dynamic_batch_scheduler-459-490-518-552-556-591)同时检查总 batch 上限、需要保持一致的输入、偏好大小和等待时间。持续到达的工作超过服务实际完成能力时，等待会积累，直至队列策略触发超时或拒绝；合批等待预算只约束其中一部分等待。
+
+## 模型实例提供可并发调用的执行入口
+
+[Backend API 契约](?fp=code&block=readme-280-313)规定，同一个模型实例的 Execute 不会同时重入；不同实例可以并发被调用。增加模型实例数使更多独立工作有机会进入后端，但 NPU 的计算和带宽仍由这些工作共同使用。
+
+[TritonModelInstance::Execute](?fp=code&block=backend_model_instance-669-693)在同一进程调用后端函数。对 `npu_ge` 来说，这个调用再进入资源池和 GE/ACL 执行；服务层安排请求，设备层完成数据与任务的实际执行。
+
+## Triton 能力与后端实现的差异
+
+Triton 可以通过 `dynamic_batching {}` 使用默认合批策略，[调度器选择](?fp=code&block=backend_model-828-846)会启用 batching；未指定偏好大小仍可合批。本仓 `npu_ge` 当前还要求 [preferred_batch_sizes 非空](?fp=code&block=inference-1454-1479)才进入 tensor 拼接分支。这是后端的具体条件，学习 Triton 的通用机制时需要与之区分。
+
+</Section>

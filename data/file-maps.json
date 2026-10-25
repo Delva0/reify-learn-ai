@@ -1,0 +1,85 @@
+{
+  "backend": [
+    {
+      "file": "src/npu_ge.cpp",
+      "label": "后端接口适配",
+      "code": "TRITONSERVER_Error* TRITONBACKEND_ModelInitialize(TRITONBACKEND_Model*);\nTRITONSERVER_Error* TRITONBACKEND_ModelInstanceExecute(\n    TRITONBACKEND_ModelInstance*, TRITONBACKEND_Request**, uint32_t);\n\nModelInstanceExecute → ProcessRequests → HandleRequest\n  → BatchSplicTasks → ProcessCombineRequestV2"
+    },
+    {
+      "file": "src/model_state.cpp",
+      "label": "模型级描述与共享资源池",
+      "code": "class ModelState : public BackendModel {\n  std::vector<OnnxTensorInfo> input_client_tensor_, output_client_tensor_;\n  Scheduler scheduler_;\n  InferMode infer_mode_;\n  bool ge_static_mode_;\n  std::map<std::pair<size_t, size_t>, Express> input_dim_map_output_dim;\n};\n\nCreate → ParseModelConfig / ParseOnnxInfo\n  → AutoCompleteConfig → InputdimToOutputdimMap"
+    },
+    {
+      "file": "src/model_instance_state.cpp",
+      "label": "实例上下文与图资源初始化",
+      "code": "class ModelInstanceState : public BackendModelInstance {\n  ModelState* model_state_;\n  Inference* inference_;\n};\n\nInit → InitializeGlobalResources → InitializeDeviceThreads\n  → InitGraphSession\n    → ParseGraph → AddAndCompileGraph → CreateAndLoadStream\n    → Scheduler::AddInstance"
+    },
+    {
+      "file": "src/scheduler.cpp",
+      "label": "有界资源池，等待与借还",
+      "code": "struct Scheduler::Instance {\n  int index, group_id;\n  aclrtContext context;\n  aclrtStream stream;\n  ge::Session* session;\n  Status status;\n  int task_count;\n};\n\nGetIdleInstances → WaitForIdleInstances → SelectInstancesWithLoadBalance\nScopedInstanceStatusReset::~ScopedInstanceStatusReset → SetInstanceStatus(IDLE)"
+    },
+    {
+      "file": "src/inference.cpp",
+      "label": "请求局部数据与执行编排",
+      "code": "class Inference {\n  ModelState* model_state_;\n  std::vector<ModelTensorInfo> input_tensor_info_, output_tensor_info_;\n  int HandleRequest(TRITONBACKEND_Request**, uint32_t);\n};\n\nProcessCombineRequestV2\n  → PrepareInferenceData → CalculateBatchDistribution\n  → DispatchInference → ExecuteInferenceCycleV2\n  → BuildCombineResponses"
+    }
+  ],
+  "ge": [
+    {
+      "file": "api/session/client/ge_api.cc",
+      "label": "SDK 门面；进程内 Session 注册与分派",
+      "code": "GEInitialize → GEInitializeV2 / SessionManager::Initialize\nSession → ConstructSession → SessionManager::CreateSession\nSession::ExecuteGraphWithStreamAsync → GetSession → InnerSession\nSession::~Session → DestroySession"
+    },
+    {
+      "file": "api/session/session/",
+      "label": "Session 身份、InnerSession 与资源归属",
+      "code": "SessionManager → session_manager_map_[session_id]\nInnerSession → GraphManager / ModelExecutor / user graph managers\nDestroySession → DestroyRtContexts → InnerSession::Finalize → erase"
+    },
+    {
+      "file": "compiler/graph/manager/",
+      "label": "图注册、构建、装载状态；host-side 运行锁",
+      "code": "GraphManager → graph_map_[graph_id] → GraphNode\nCompileGraph → PreRun → GeRootModel → SetBuildFlag(true)\nLoadGraph → executor::LoadGraph → SetLoadFlag(true)\nExecuteGraphWithStreamAsync → run_mutex / RunFlag → executor"
+    },
+    {
+      "file": "runtime/v1/",
+      "label": "model_id 映射与静态/Hybrid 执行分支",
+      "code": "ModelExecutor → GeRootModel::model_id\nModelManager → HybridDavinciModel | DavinciModel\nDavinciModel::NnExecute → aclmdlRIExecuteAsync"
+    }
+  ],
+  "metadef": [
+    {
+      "file": "inc/external/exe_graph/runtime/runtime_tensor.h",
+      "label": "运行时 Tensor；关键字段投影",
+      "code": "class Tensor {\n  StorageShape storage_shape_;\n  StorageFormat storage_format_;\n  DataType data_type_;\n  TensorData tensor_data_;\n};\n\nTensor(StorageShape, StorageFormat, TensorPlacement, DataType, void*);"
+    },
+    {
+      "file": "inc/external/exe_graph/runtime/tensor_data.h",
+      "label": "buffer 的地址、容量、位置与管理函数",
+      "code": "TensorData = {addr_, manager_, size_, placement_}\n\nTensorData::~TensorData() → Free()\nFree() → manager_ == nullptr ? SUCCESS\n                            : manager_(addr_, kFreeTensor, nullptr)"
+    }
+  ],
+  "runtime": [
+    {
+      "file": "include/external/acl/acl_base_rt.h",
+      "label": "对外 stream handle",
+      "code": "typedef void* aclrtStream;"
+    },
+    {
+      "file": "src/acl/aclrt_impl/stream.cpp",
+      "label": "ACL 门面转交 RT",
+      "code": "aclrtCreateStreamImpl(...) → rtStreamCreate(...)\naclrtSynchronizeStreamImpl(...) → rtStreamSynchronize(...)"
+    },
+    {
+      "file": "src/acl/aclrt_impl/model_ri.cpp",
+      "label": "模型异步执行入口",
+      "code": "aclmdlRIExecuteAsyncImpl(...) → rtModelExecute(..., 0U)"
+    },
+    {
+      "file": "src/runtime/api/api_c_stream.cc",
+      "label": "RT stream 同步分派",
+      "code": "rtStreamSynchronize(...)\n  → unwrap Stream handle\n  → Api::StreamSynchronize(...)"
+    }
+  ]
+}

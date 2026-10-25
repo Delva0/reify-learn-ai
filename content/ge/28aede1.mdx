@@ -1,0 +1,281 @@
+<CodeBlock
+  id="model_builder-1345-1393"
+  render={false}
+  src="compiler/graph/build/model_builder.cc"
+  lines="1345-1393"
+  notes={[
+    {"at":{"line":1351,"text":"AssignLogicalStreams"},"desc":"为图中工作安排逻辑 stream；跨流依赖还要在后续插入同步节点。"},
+    {"at":{"line":1364,"text":"AssignMemory"},"desc":"规划张量的内存偏移与可复用关系；执行时仍需要实际设备缓冲区。"},
+    {"at":{"line":1379,"text":"CompileSingleOp"},"desc":"准备节点对应的算子实现，使多次推理可使用编译结果。"}
+  ]}
+/>
+
+<CodeBlock
+  id="davinci_model-1279-1292"
+  render={false}
+  src="runtime/v1/graph/load/model_manager/davinci_model.cc"
+  lines="1279-1292"
+  notes={[
+    {"at":{"line":1291,"text":"DoTaskSink"},"desc":"加载阶段组织和下发已准备的任务，供后续模型执行使用。"}
+  ]}
+  links={[
+    {"at":{"line":1291,"text":"DoTaskSink"},"href":"?fp=code&block=davinci_model-886-938"}
+  ]}
+/>
+
+<CodeBlock
+  id="davinci_model-886-938"
+  render={false}
+  src="runtime/v1/graph/load/model_manager/davinci_model.cc"
+  lines="886-938"
+/>
+
+<CodeBlock
+  id="davinci_model-7960-7966-8016-8036"
+  render={false}
+  src="runtime/v1/graph/load/model_manager/davinci_model.cc"
+  lines="7960-7966,8016-8036"
+  notes={[
+    {"at":{"line":8026,"text":"aclmdlRIExecuteAsync"},"desc":"触发已加载模型的设备任务；任务序列仍可包含多个算子。"}
+  ]}
+  marks={[
+    {"at":{"line":8026,"text":"aclmdlRIExecuteAsync"},"color":"amber"}
+  ]}
+/>
+
+<CodeBlock
+  id="ge_api-632-661"
+  render={false}
+  src="api/session/client/ge_api.cc"
+  lines="632-661"
+/>
+
+<CodeBlock
+  id="graph_converter-854-874"
+  render={false}
+  src="runtime/v2/lowering/graph_converter.cc"
+  lines="854-874"
+  notes={[
+    {"at":{"line":863,"text":"CreateInitNode"},"desc":"构造初始化部分，把可复用的准备工作与每次执行分开。"},
+    {"at":{"line":868,"text":"CreateMainNode"},"desc":"把计算图转换为运行时执行节点，包括必要的 Host 工作和设备任务提交。"}
+  ]}
+/>
+
+<CodeBlock
+  id="sequential_executor-18-30"
+  render={false}
+  src="runtime/v2/core/executor/sequential/executor/sequential_executor.c"
+  lines="18-30"
+  notes={[
+    {"at":{"line":22,"pattern":"node->func"},"desc":"Host 侧的函数指针调用；不同执行节点可做 shape、内存管理或提交设备任务。这里的 Kernel 与 NPU 算子 kernel 属于不同执行层次。"}
+  ]}
+  marks={[
+    {"at":{"line":22,"pattern":"node->func"},"color":"blue"}
+  ]}
+/>
+
+# 计算图编译与执行
+
+GE 接收进程内 SDK 调用，管理计算图的编译、装载与执行，并通过 ACL/RT 将工作交给设备。
+
+## 整图执行的准备
+
+<Section id="graph-basics">
+
+单个 kernel 通过设备地址完成计算。一个网络有大量相互依赖的算子；还需要决定每个算子的输入输出地址、中间张量何时可复用、任务在哪条 stream 上提交，以及跨流何时等待。GE 将这些整图工作组织为可复用的编译与执行过程。
+
+### 图表达计算，执行需要资源与任务
+
+以 $\logical{u}=\operatorname{MatMul}(X,W)$、$\logical{Y}=\operatorname{ReLU}(u)$ 为例，图中的数据依赖要求 ReLU 读取 MatMul 已产生的 $u$。执行还需要 $u$ 的实际内存，以及与 shape、dtype 对应的算子实现。跨 stream 时，这个生产消费关系还要落实成同步。
+
+[ModelBuilder::BuildModelForGetTask](?fp=code&block=model_builder-1345-1393)把逻辑流分配、内存规划、算子编译和同步节点插入串在一起。整图视角使编译器能分析中间张量的生存期，并为不再同时使用的数据规划内存复用。
+
+### 编译、装载与执行分别承担的工作
+
+编译阶段准备图的执行方案；装载阶段为这份方案建立实际执行资源；后续执行使用本次输入触发计算。对固定模型反复推理时，权重、算子实现和执行资源可以跨次保留，新输入仍要进入本次执行。
+
+静态执行器在加载时调用 [DoTaskSink](?fp=code&block=davinci_model-1279-1292)，执行时通过 [aclmdlRIExecuteAsync](?fp=code&block=davinci_model-7960-7966-8016-8036)触发已加载模型。把一组任务提前准备并组织起来，可以减少每次由 Host 逐个准备和提交的工作。模型中的多个算子仍可对应多个设备任务；整图触发与算子融合是分别发生的优化。
+
+### Session 的组织作用
+
+调用者通过 Session 注册、编译、装载和执行图，使用 graph ID 定位其中一张图。[ExecuteGraphWithStreamAsync](?fp=code&block=ge_api-632-661)再进入内部执行对象。Session 是图与执行资源的管理边界，同一张 NPU 上可以有多个 Session、多个图和多条 stream；实际资源共享关系由这些对象怎样创建和使用决定。
+
+</Section>
+
+## 静态与动态 shape 的执行成本
+
+<Section id="shape-cost">
+
+shape 决定中间张量需要多少内存，也影响算子的分块和执行参数。以 $\logical{Y}=\logical{X}W$ 为例，$X$ 的 batch 变化会改变输出和部分工作空间的大小。已知固定 shape 时，更多准备工作可以提前完成；运行前才知道的维度，需要执行时补齐相关工作。
+
+### 静态 shape 提前固定的内容
+
+固定 shape 使编译阶段可以确定更多张量大小、内存偏移和算子参数，再在加载时准备任务与资源。[静态模型执行入口](?fp=code&block=davinci_model-7960-7966-8016-8036)体现了这种复用：同一已加载模型接受新一批输入并再次执行。
+
+输入地址仍可能每次变化，资源也需要正确管理；静态 shape 减少的是需要重新判断和准备的工作，并未消除 Host 的所有参与。
+
+### 动态 shape 将必要工作留到执行时
+
+动态 shape 的图拓扑可以保持不变，变化的是某些张量的实际维度。GE 的 [Lowering](?fp=code&block=graph_converter-854-874)将计算图转换成 ExecuteGraph，并分出初始化、主执行和清理部分；主执行中可以包含 shape 推导、内存处理和设备任务提交。
+
+[SequentialExecute](?fp=code&block=sequential_executor-18-30)展示一种 Host 执行循环：按执行节点调用函数。某个节点在 Host 算出大小，后面的节点才能申请内存或提交使用这个大小的任务。动态执行路径因此可能出现设备等待 Host 准备的间隔；具体成本取决于编译后的执行图和实际输入。
+
+### 分档、合批与多流解决的成本不同
+
+如果输入 shape 只来自少数几个已知档位，可以为这些档位准备相应执行方案，代价是编译、装载和常驻资源增加。合批则改变一次执行的工作量；多流提供不同工作之间的重叠机会。它们分别作用于准备成本、单次计算效率和并发机会，收益需要在同一工作负载下比较。
+
+网络结构固定与 shape 固定是两个属性。这里讨论的动态 shape 仍可以使用编译过的固定拓扑，而其中已知 shape 的子图也可能交给[静态执行器](#execute)。
+
+</Section>
+
+## 图管理与执行边界
+
+<Annotations notes={{
+  "data-edge":"数据边连接源节点的输出 Anchor 与目标节点的输入 Anchor。",
+  "control-edge":"控制边表达节点间的执行依赖，不承载张量数据。",
+  identity:"graph_id 是 Session 内部的键；定位图时需要同时确定 session_id。",
+  stream:"调用者提供的设备执行流。",
+  buffer:"仍可能被设备任务访问的缓冲区。"
+}} />
+
+<Section id="boundary">
+
+### 进程边界与调用关系
+
+<TextNote desc="该入口拒绝 DFlow Session。">`Session::ExecuteGraphWithStreamAsync`</TextNote> 从进程静态 `g_session_manager` 查找 InnerSession 并直接调用。这条链是进程内调用，不是 GE RPC；边界之外的编译插件、AICPU 和驱动另有执行机制。
+
+```cpp
+Session::ExecuteGraphWithStreamAsync(graph_id, stream, inputs, outputs)
+  → SessionManager::GetSession(sessionId_)
+  → InnerSession::ExecuteGraphWithStreamAsync(...)
+  → UserGraphsManager::ExecuteGraphWithStreamAsync(...)
+  → GraphManager::ExecuteGraphWithStreamAsync(...)    
+  → ModelExecutor::ExecuteGraphWithStream(...)
+  → ModelManager::ExecuteModelWithStreamAsync(...)
+```
+
+GE 自身有后台线程：`GraphManager::Initialize` 创建 `prerun_thread_v2_`。另一接口 `RunGraphAsync` 将带 callback 的 RunArgs 入队；本后端使用的 `ExecuteGraphWithStreamAsync` 没有这个 callback 参数，不能把两条路径画成同一队列。
+
+南向调用 [ACL / RT 接口](runtime.html#stream)。
+
+<Evidence ids="in_process_execute thread_callback_boundary" />
+
+</Section>
+
+<Section id="objects">
+
+### 图与会话的数据模型
+
+$$
+\begin{aligned}
+G&=(V,\annotate{data-edge}{\dataedge{E_{\mathrm{data}}}},\annotate{control-edge}{\controledge{E_{\mathrm{control}}}})\\
+\dataedge{e_{\mathrm{data}}}&:(v,\mathrm{out}_i)\to(w,\mathrm{in}_j)\\
+\annotate{identity}{\mathrm{GraphIdentity}}&=(\mathrm{session\_id},\mathrm{graph\_id})
+\end{aligned}
+$$
+
+| 对象 | 源码中的结构 / 归属 | 对调用者的含义 |
+| --- | --- | --- |
+| <TextNote desc="门面持 shared_ptr<GraphImpl>；GraphImpl 再共享 ComputeGraphPtr。">`ge::Graph`</TextNote> | ComputeGraph 持节点、输入、输出和子图；边通过 Node 的数据/控制 Anchor 连接。 | 复制 Graph 共享底层图。边不是独立的全局 Edge 容器。 |
+| <TextNote desc="门面保存 session ID；SessionManager 的进程内 map 持 InnerSession，后者组织图管理与执行对象。">`ge::Session`</TextNote> | 按 Session 管理图与执行资源。 | Session 不对应 OS 进程或单条设备 stream。 |
+| <TextNote desc="GraphManager::graph_map_ 按 graph_id 注册。">`GraphNode`</TextNote> | 持共享 Graph 及编译、装载、运行状态。 | 主仓局部 graph1 离开作用域，不等于 RemoveGraph 或卸载模型。 |
+
+运行时输入输出使用 <TextNote href="metadef.html#tensor" desc="gert::Tensor 持 shape、format、dtype 与 TensorData，描述对象本身不代表数据复制。">`gert::Tensor`</TextNote>；设备执行的完成条件由<TextNote href="runtime.html#stream" desc="同步成功才能确认对应执行流既有工作的完成，异步提交成功本身不能确认。">stream 同步</TextNote>建立。
+
+<Evidence ids="graph_structure graph_ownership graph_identity session_create" />
+
+</Section>
+
+<Section id="lifecycle">
+
+### 图解析、注册、编译与加载
+
+$$
+\logical{\mathrm{file}}\xrightarrow{\mathrm{Parse}}\logical{\mathrm{Graph}}\xrightarrow{\mathrm{Add}}\logical{\mathrm{registered}}\xrightarrow{\mathrm{Compile}}\device{\mathrm{built}}\xrightarrow{\mathrm{Load}}\device{\mathrm{loaded}}
+$$
+
+| 操作 | 状态变化 | 成功返回能证明什么 |
+| --- | --- | --- |
+| <TextNote desc="创建 ComputeGraph，调用 ModelParser::Parse，处理参数和输出节点后包装为 Graph。">`aclgrphParseONNX / TensorFlow`</TextNote> | 源模型转换为 Graph。 | 未因此完成编译、装载或推理。 |
+| <TextNote desc="通过 InnerSession 和 user graph manager 进入 GraphManager，注册 GraphNode 及图映射。">`Session::AddGraph`</TextNote> | 图进入注册状态。 | Add 本身不是 Compile。 |
+| <TextNote desc="普通 GraphManager 路径同步执行 PreRun，得到 GeRootModel 后 SetBuildFlag(true)。">`CompileGraph`</TextNote> | 建立编译产物；已构建且无需重建时可复用。 | 不是一次设备推理完成。 |
+| <TextNote desc="等待 executor LoadGraph 返回后置 LoadFlag；静态分支完成 DavinciModel::Init 并登记模型。">`LoadGraph`</TextNote> | 检查编译产物，拒绝运行中或重复装载，建立装载状态。 | 仅建立加载 API 的主机侧完成边界。 |
+
+<TextNote desc="可能引入额外的图实例及执行点层。">AutoFuse / hybrid compile mode</TextNote> 的图管理路径另有分支。
+
+<Evidence ids="parse add_dispatch compile_return load_return" />
+
+</Section>
+
+<Section id="execute">
+
+### 异步执行与设备完成条件
+
+<CodeBlock language="cpp" code={`
+ModelManager::ExecuteModelWithStreamAsync(...)
+  ├─ HybridModel 存在 → HybridDavinciModel::ExecuteWithStreamAsync(...)
+  │                    → RT2 wrapper → executor_->Execute(...stream/allocator...)
+  └─ 普通静态模型    → ExecuteModelWithStream(..., true, ...)
+                       → DavinciModel::NnExecute(async=true)
+                       → aclmdlRIExecuteAsync(...caller_stream...)
+`.trim()} notes={{"aclmdlRIExecuteAsync":"静态异步分支采用调用者 stream，is_inner_model_stream_=false；内建 stream 的显式同步分支以该标志为条件。","HybridDavinciModel::ExecuteWithStreamAsync":"Hybrid / RT2 使用独立执行路径，内部同步策略不能从普通静态分支推出。"}} />
+
+$$
+\begin{aligned}
+\host{\mathrm{Success}(\mathrm{ExecuteAsync})}&\not\Rightarrow\device{\mathrm{Completed}(\annotate{stream}{s})}\\
+\host{t_{\mathrm{host\_return}}}&<\device{t_{\mathrm{device\_complete}}}\quad\text{is possible}\\
+\host{\mathrm{SyncSuccess}(s)}&\Rightarrow\device{\mathrm{Completed}(\mathrm{prior\ work\ on}\ s)}\\
+\mathrm{safe\_reuse}(\annotate{buffer}{b})&\Rightarrow\device{\mathrm{Completed}(\mathrm{last\ device\ access\ to}\ b)}
+\end{aligned}
+$$
+
+GraphManager 持每图 run\_mutex，设置 RunFlag，主机函数返回时 guard 清标记并释放锁。设备工作此时仍可能继续。因此 RunFlag=false 不足以证明 buffer 可释放；这把锁也不覆盖完整设备执行期。
+
+```cpp
+GraphManager::ExecuteGraphWithStreamAsync(...)
+  → lock(graph_node->GetRunMutex())
+  → SetRunFlag(true)
+  → executor_->ExecuteGraphWithStream(...)
+  → return / guard: SetRunFlag(false), unlock
+
+Triton GE backend
+  → ExecuteGraphWithStreamAsync(...)
+  → aclrtSynchronizeStream(instance->stream)
+  → D2H → 构造响应 → 释放本次 buffer
+  → 本后端 Scheduler::Instance 恢复 IDLE
+```
+
+[Triton 后端](index.html#algorithm)通过自己的 `Scheduler` 保持所选 `Scheduler::Instance` 为 RUNNING，直到 stream 同步、回传和响应构建完成后才恢复 IDLE；这项生命周期约束不能由 GE 的 host-side RunFlag 替代。
+
+<Evidence ids="static_async_boundary hybrid_boundary run_flag_lifetime backend_completion" />
+
+</Section>
+
+<Section id="teardown">
+
+### 会话销毁与资源释放
+
+```cpp
+Session::~Session()
+  → SessionManager::DestroySession(session_id)
+    → DestroyRtContexts(session_id)
+    → InnerSession::Finalize()
+      → GraphManager::Finalize()
+      → ModelExecutor::Finalize()
+    → session_manager_map_.erase(session_id)
+```
+
+GE 的 GraphManager Finalize 会停止并 join 预运行线程、卸载加载模型、清图 map。[后端](index.html#implementation)当前的 ModelState / Scheduler 析构主体为空，ModelInstanceState 只删除 Inference，没有完整兑现这条 GE 正常释放链。SDK 有销毁机制，与调用方实际调用了销毁，是两个事实。
+
+<Evidence ids="sdk_teardown backend_teardown_gap" />
+
+</Section>
+
+<Section id="sources">
+
+### 源码组织
+
+<Files repo="ge" />
+
+</Section>
+

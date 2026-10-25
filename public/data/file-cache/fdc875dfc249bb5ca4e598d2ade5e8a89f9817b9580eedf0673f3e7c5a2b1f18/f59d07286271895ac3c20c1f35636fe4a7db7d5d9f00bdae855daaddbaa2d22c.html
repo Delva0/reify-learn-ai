@@ -1,0 +1,602 @@
+<pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!--</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># Copyright 2021-2024, NVIDIA CORPORATION &#x26; AFFILIATES. All rights reserved.</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># Redistribution and use in source and binary forms, with or without</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># modification, are permitted provided that the following conditions</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># are met:</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#  * Redistributions of source code must retain the above copyright</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#    notice, this list of conditions and the following disclaimer.</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#  * Redistributions in binary form must reproduce the above copyright</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#    notice, this list of conditions and the following disclaimer in the</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#    documentation and/or other materials provided with the distribution.</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#  * Neither the name of NVIDIA CORPORATION nor the names of its</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#    contributors may be used to endorse or promote products derived</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#    from this software without specific prior written permission.</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">--></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">![License](https://img.shields.io/badge/License-BSD3-lightgrey.svg)</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://opensource.org/licenses/BSD-3-Clause</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># Triton Inference Server Backend</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">A Triton </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*backend*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> is the implementation that executes a model. A</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backend can be a wrapper around a deep-learning framework, like</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">PyTorch, TensorFlow, TensorRT or ONNX Runtime. Or a backend can be</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">custom C/C++ logic performing any operation (for example, image</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">pre-processing).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">This repo contains documentation on Triton backends and also source,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">scripts and utilities for creating Triton backends. You do not need to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">use anything provided in this repo to create a Triton backend but you</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">will likely find its contents useful.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Frequently Asked Questions</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Full documentation is included below but these shortcuts can help you</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">get started in the right direction.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Where can I ask general questions about Triton and Triton backends?</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Be sure to read all the information below as well as the [general</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">documentation](https://github.com/triton-inference-server/server#triton-inference-server)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">available in the main</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">server</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/server</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) repo. If</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">you don't find your answer there you can ask questions on the main</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton [issues</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">page](https://github.com/triton-inference-server/server/issues).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Where can I find all the backends that are available for Triton?</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Anyone can develop a Triton backend, so it isn't possible for us to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">know about all available backends. But the Triton project does provide</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">a set of supported backends that are tested and updated with each</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton release.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**TensorRT**</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: The TensorRT backend is used to execute TensorRT</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">models. The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">tensorrt_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/tensorrt_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">repo contains the source for the backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**ONNX Runtime**</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: The ONNX Runtime backend is used to execute ONNX</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">models. The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">onnxruntime_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/onnxruntime_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">repo contains the documentation and source for the backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**TensorFlow**</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: The TensorFlow backend is used to execute TensorFlow</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">models in both GraphDef and SavedModel formats. The same backend is</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">used to execute both TensorFlow 1 and TensorFlow 2 models. The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">tensorflow_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/tensorflow_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">repo contains the documentation and source for the backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**PyTorch**</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: The PyTorch backend is used to execute PyTorch models in both</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">TorchScript and PyTorch 2.0 formats. The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">pytorch_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/pytorch_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">repo contains the documentation and source for the backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**OpenVINO**</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: The OpenVINO backend is used to execute</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">OpenVINO</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://docs.openvinotoolkit.org/latest/index.html</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">models. The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">openvino_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/openvino_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">repo contains the documentation and source for the backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**Python**</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: The Python backend allows you to write your model logic in</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Python. For example, you can use this backend to execute pre/post</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">processing code written in Python, or to execute a PyTorch Python</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">script directly (instead of first converting it to TorchScript and</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">then using the PyTorch backend). The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">python_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/python_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">repo contains the documentation and source for the backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**DALI**</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">DALI</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/NVIDIA/DALI</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) is a collection of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">highly optimized building blocks and an execution engine that</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">accelerates the pre-processing of the input data for deep learning</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">applications. The DALI backend allows you to execute your DALI</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">pipeline within Triton. The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">dali_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/dali_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">repo contains the documentation and source for the backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**FIL**</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: The FIL ([Forest Inference</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Library](https://github.com/rapidsai/cuml/tree/branch-21.10/python/cuml/fil))</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backend is used to execute a variety of tree-based ML models, including</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">XGBoost models, LightGBM models, Scikit-Learn random forest models, and cuML</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">random forest models. The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">fil_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/fil_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) repo</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">contains the documentation and source for the backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**vLLM**</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: The vLLM backend is designed to run</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">supported models</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://vllm.readthedocs.io/en/latest/models/supported_models.html</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">on a [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">vLLM engine</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/vllm-project/vllm/blob/main/vllm/engine/async_llm_engine.py</span><span style="color:#24292E;--shiki-dark:#E1E4E8">).</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">This backend depends on [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">python_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/python_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">to load and serve models. The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">vllm_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/vllm_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) repo</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">contains the documentation and source for the backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**Important Note!**</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Not all the above backends are supported on every platform</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">supported by Triton. Look at the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Backend-Platform Support Matrix</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">docs/backend_platform_support_matrix.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">to learn about the same.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### How can I develop my own Triton backend?</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">First you probably want to ask on the main Triton [issues</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">page](https://github.com/triton-inference-server/server/issues) to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">make sure you are not duplicating a backend that already exists. Then</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">follow the [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">tutorial</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">examples/README.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) to learn how to create your</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">first simple Triton backend and incrementally improve it to add more</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">features. You should also read the complete documentation on [Triton</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backends](#backends).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Can I add (or remove) a backend to an existing Triton installation?</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Yes. See [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Backend Shared Library</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#backend-shared-library</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) for general</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">information about how the shared library implementing a backend is</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">managed by Triton, and [Triton with Unsupported and Custom</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Backends](https://github.com/triton-inference-server/server/blob/main/docs/customization_guide/compose.md#triton-with-unsupported-and-custom-backends)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">for documentation on how to add your backend to the released Triton</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Docker image. For a standard install the globally available backends</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">are in /opt/tritonserver/backends.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### What about backends developed using the "legacy custom backend" API.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The legacy custom API is removed from Triton. If you have custom</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backends that you developed using this older API you must port them to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the new [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Triton Backend API</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#triton-backend-api</span><span style="color:#24292E;--shiki-dark:#E1E4E8">).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Backends</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">A Triton </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*backend*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> is the implementation that executes a model. A</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backend can be a wrapper around a deep-learning framework, like</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">PyTorch, TensorFlow, TensorRT, ONNX Runtime or OpenVINO. A backend can</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">also implement any functionality you want as long as it adheres to the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">backend API</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#triton-backend-api</span><span style="color:#24292E;--shiki-dark:#E1E4E8">). Triton uses this API to send</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">requests to the backend for execution and the backend uses the API to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">communicate with Triton.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Every model must be associated with a backend. A model's backend is</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">specified in the model's configuration using the </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`backend`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> setting.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For using TensorRT backend, the value of this setting should be </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`tensorrt`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Similarly, for using PyTorch, ONNX and TensorFlow backends, the </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`backend`</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">field should be set to </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`pytorch`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`onnxruntime`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> or </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`tensorflow`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> respectively.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For all other backends, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`backend`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> must be set to the name of the backend.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Some backends may also check the </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`platform`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> setting for categorizing the model,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">for example, in TensorFlow backend, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`platform`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> should be set to</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">`tensorflow_savedmodel`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> or </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`tensorflow_graphdef`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> according to the model format.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Please refer to the specific backend repository on whether </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`platform`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> is used.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Backend Shared Library</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Each backend must be implemented as a shared library and the name of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the shared library must be </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*libtriton_\&#x3C;backend-name</span><span style="color:#005CC5;--shiki-light-font-style:italic;--shiki-dark:#79B8FF;--shiki-dark-font-style:italic">\></span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">.so*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">. For</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">example, if the name of the backend is "mybackend", a model indicates</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">that it uses the backend by setting the model configuration 'backend'</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">setting to "mybackend", and Triton looks for </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*libtriton_mybackend.so*</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">as the shared library that implements the backend. The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">tutorial</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">examples/README.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) shows examples of how to build your</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backend logic into the appropriate shared library.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For a model, </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*M*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> that specifies backend </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*B*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, Triton searches for the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backend shared library in the following places, in this order:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> \&#x3C;model_repository</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\></span><span style="color:#24292E;--shiki-dark:#E1E4E8">/M/\&#x3C;version_directory</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\></span><span style="color:#24292E;--shiki-dark:#E1E4E8">/libtriton_B.so</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> \&#x3C;model_repository</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\></span><span style="color:#24292E;--shiki-dark:#E1E4E8">/M/libtriton_B.so</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> \&#x3C;global_backend_directory</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\></span><span style="color:#24292E;--shiki-dark:#E1E4E8">/B/libtriton_B.so</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Where \&#x3C;global_backend_directory</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> is by default</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">/opt/tritonserver/backends.  The --backend-directory flag can be used</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">to override the default.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Typically you will install your backend into the global backend</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">directory. For example, if using Triton Docker images you can follow</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the instructions in [Triton with Unsupported and Custom</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Backends](https://github.com/triton-inference-server/server/blob/main/docs/customization_guide/compose.md#triton-with-unsupported-and-custom-backends). Continuing</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the example of a backend names "mybackend", you would install into the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton image as:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">/opt/</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  tritonserver/</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    backends/</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      mybackend/</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        libtriton_mybackend.so</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        ... # other files needed by mybackend</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Starting from 24.01, the default backend shared library name can be changed by</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">providing the </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`runtime`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> setting in the model configuration. For example,</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">runtime: "my_backend_shared_library_name.so"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">A model may choose a specific runtime implementation provided by the backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Triton Backend API</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">A Triton backend must implement the C interface defined in</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">tritonbackend.h</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/core/tree/main/include/triton/core/tritonbackend.h</span><span style="color:#24292E;--shiki-dark:#E1E4E8">). The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">following abstractions are used by the API.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### TRITONBACKEND_Backend</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">A TRITONBACKEND_Backend object represents the backend itself. The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">same backend object is shared across all models that use the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backend. The associated API, like TRITONBACKEND_BackendName, is used</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">to get information about the backend and to associate a user-defined</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">state with the backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">A backend can optionally implement TRITONBACKEND_Initialize and</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">TRITONBACKEND_Finalize to get notification of when the backend object</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">is created and destroyed (for more information see [backend</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">lifecycles](#backend-lifecycles)).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### TRITONBACKEND_Model</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">A TRITONBACKEND_Model object represents a model. Each model loaded by</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton is associated with a TRITONBACKEND_Model. Each model can use</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the TRITONBACKEND_ModelBackend API to get the backend object</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">representing the backend that is used by the model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The same model object is shared across all instances of that</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model. The associated API, like TRITONBACKEND_ModelName, is used to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">get information about the model and to associate a user-defined state</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">with the model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Most backends will implement TRITONBACKEND_ModelInitialize and</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">TRITONBACKEND_ModelFinalize to initialize the backend for a given</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model and to manage the user-defined state associated with the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">(for more information see [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">backend lifecycles</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#backend-lifecycles</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The backend must take into account threading concerns when</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">implementing TRITONBACKEND_ModelInitialize and</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">TRITONBACKEND_ModelFinalize.  Triton will not perform multiple</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">simultaneous calls to these functions for a given model; however, if a</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backend is used by multiple models Triton may simultaneously call the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">functions with a different thread for each model. As a result, the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backend must be able to handle multiple simultaneous calls to the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">functions. Best practice for backend implementations is to use only</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">function-local and model-specific user-defined state in these</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">functions, as is shown in the [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">tutorial</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">examples/README.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### TRITONBACKEND_ModelInstance</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">A TRITONBACKEND_ModelInstance object represents a model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*instance*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">. Triton creates one or more instances of the model based on</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*instance_group*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> settings specified in the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">configuration. Each of these instances is associated with a</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">TRITONBACKEND_ModelInstance object.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The only function that the backend must implement is</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">TRITONBACKEND_ModelInstanceExecute. The</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">TRITONBACKEND_ModelInstanceExecute function is called by Triton to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">perform inference/computation on a batch of inference requests. Most</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backends will also implement TRITONBACKEND_ModelInstanceInitialize</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">and TRITONBACKEND_ModelInstanceFinalize to initialize the backend for</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">a given model instance and to manage the user-defined state associated</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">with the model (for more information see [backend</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">lifecycles](#backend-lifecycles)).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The backend must take into account threading concerns when</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">implementing TRITONBACKEND_ModelInstanceInitialize,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">TRITONBACKEND_ModelInstanceFinalize and</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">TRITONBACKEND_ModelInstanceExecute.  Triton will not perform multiple</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">simultaneous calls to these functions for a given model instance;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">however, if a backend is used by a model with multiple instances or by</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">multiple models Triton may simultaneously call the functions with a</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">different thread for each model instance. As a result, the backend</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">must be able to handle multiple simultaneous calls to the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">functions. Best practice for backend implementations is to use only</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">function-local and model-specific user-defined state in these</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">functions, as is shown in the [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">tutorial</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">examples/README.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### TRITONBACKEND_Request</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">A TRITONBACKEND_Request object represents an inference request made</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">to the model. The backend takes ownership of the request object(s) in</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">TRITONBACKEND_ModelInstanceExecute and must release each request by</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">calling TRITONBACKEND_RequestRelease. However, the ownership of request</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">object is returned back to Triton in case TRITONBACKEND_ModelInstanceExecute</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">returns an error. See [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Inference Requests and Responses</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#inference-requests-and-responses</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">for more information about request lifecycle.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The Triton Backend API allows the backend to get information about the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">request as well as the input and request output tensors of the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">request. Each request input is represented by a TRITONBACKEND_Input</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">object.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### TRITONBACKEND_Response</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">A TRITONBACKEND_Response object represents a response sent by the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backend for a specific request. The backend uses the response API to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">set the name, shape, datatype and tensor values for each output tensor</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">included in the response. The response can indicate either a failed or</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">a successful request. See [Inference Requests and</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Responses](#inference-requests-and-responses) for more information</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">about request-response lifecycle.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### TRITONBACKEND_BackendAttribute</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">A </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`TRITONBACKEND_BackendAttribute`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> allows a backend to set certain attributes which</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">are queried by Triton to inform certain feature support, preferred configurations, and</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">other types of backend-specific behavior.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">When initializing a backend, Triton will query the </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`TRITONBACKEND_GetBackendAttribute`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> function</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">if implemented by the backend. This function is optional to implement, but is generally used to call</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the related </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`TRITONBACKEND_BackendAttribute`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> APIs for setting backend-specific attributes.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Some of the relevant BackendAttribute setter APIs are listed below:</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> `TRITONBACKEND_BackendSetExecutionPolicy`</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> `TRITONBACKEND_BackendAttributeAddPreferredInstanceGroup`</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">    -</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Defines a priority list of instance groups to prefer for this backend if a model config doesn't explicitly define any instance groups.</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> `TRITONBACKEND_BackendAttributeSetParallelModelInstanceLoading`</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">    -</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Defines whether the backend can safely handle concurrent calls to </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`TRITONBACKEND_ModelInstanceInitialize`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> or not.</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">    -</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Loading model instances in parallel can improve server startup times for large instance counts.</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">    -</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> By default, this attribute is set to false, meaning that parallel instance loading is disabled for all backends unless explicitly enabled.</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">    -</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> The following official backends currently support loading model instances in parallel:</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">        -</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Python</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">        -</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ONNXRuntime</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The full list of </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`TRITONBACKEND_BackendAttribute`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> related APIs are defined in</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">tritonbackend.h</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/core/blob/main/include/triton/core/tritonbackend.h</span><span style="color:#24292E;--shiki-dark:#E1E4E8">).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Backend Lifecycles</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">A backend must carefully manage the lifecycle of the backend itself,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the models and model instances that use the backend and the inference</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">requests that execute on the model instances using the backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### Backend and Model</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Backend, model and model instance initialization is triggered when</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton loads a model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> If the model requires a backend that is not already in use by an</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  already loaded model, then:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Triton [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">loads the shared library</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#backend-shared-library</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) that</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    implements the backend required by the model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Triton creates the TRITONBACKEND_Backend object that represents</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    the backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Triton calls TRITONBACKEND_Initialize if it is implemented in the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    backend shared library. TRITONBACKEND_Initialize should not return</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    until the backend is completely initialized. If</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    TRITONBACKEND_Initialize returns an error, Triton will report that</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    the model failed to load.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Triton creates the TRITONBACKEND_Model object that represents the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  model. Triton calls TRITONBACKEND_ModelInitialize if it is</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  implemented in the backend shared library.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  TRITONBACKEND_ModelInitialize should not return until the backend</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  is completely initialized for the model. If</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  TRITONBACKEND_ModelInitialize returns an error, Triton will show</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  that the model failed to load.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> For each model instance specified for the model in the model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  configuration:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Triton creates the TRITONBACKEND_ModelInstance object that</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    represents the model instance.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Triton calls TRITONBACKEND_ModelInstanceInitialize if it is</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    implemented in the backend shared library.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    TRITONBACKEND_ModelInstanceInitialize should not return until the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    backend is completely initialized for the instance. If</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    TRITONBACKEND_ModelInstanceInitialize returns an error, Triton</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    will show that the model failed to load.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Backend, model and model instance finalization is triggered when</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton unloads a model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> For each model instance:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Triton calls TRITONBACKEND_ModelInstanceFinalize if it is</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    implemented in the backend shared library.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    TRITONBACKEND_ModelInstanceFinalize should not return until the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    backend is completely finalized, including stopping any threads</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    create for the model instance and freeing any user-defined state</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    created for the model instance.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Triton destroys the TRITONBACKEND_ModelInstance object that</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    represents the model instance.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Triton calls TRITONBACKEND_ModelFinalize if it is implemented in the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  backend shared library. TRITONBACKEND_ModelFinalize should not</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  return until the backend is completely finalized, including stopping</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  any threads create for the model and freeing any user-defined state</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  created for the model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Triton destroys the TRITONBACKEND_Model object that represents the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Even if no other loaded model requires the backend, Triton does not</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  finalize and unload the backend until the tritonserver process is</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  exiting. When the tritonserver process exits:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Triton calls TRITONBACKEND_Finalize if it is implemented in the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    backend shared library. TRITONBACKEND_ModelFinalize should not</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    return until the backend is completely finalized, including</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    stopping any threads create for the backend and freeing any</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    user-defined state created for the backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Triton destroys the TRITONBACKEND_Backend object that represents</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    the backend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### Inference Requests and Responses</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton calls TRITONBACKEND_ModelInstanceExecute to execute inference</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">requests on a model instance. Each call to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">TRITONBACKEND_ModelInstanceExecute communicates a batch of requests</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">to execute and the instance of the model that should be used to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">execute those requests. The backend should not allow the caller</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">thread to return from TRITONBACKEND_ModelInstanceExecute until that</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">instance is ready to handle another set of requests. Typically this</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">means that the TRITONBACKEND_ModelInstanceExecute function will</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">create responses and release the requests before returning. However,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">in case TRITONBACKEND_ModelInstanceExecute returns an error, the ownership</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">of requests is transferred back to Triton which will then be responsible</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">for releasing them. Therefore, in the case where TRITONBACKEND_ModelInstanceExecute</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">returns an error, the backend must not retain references to the requests</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">or access them in any way. For more detailed description of request/response</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">lifetimes, study the documentation of TRITONBACKEND_ModelInstanceExecute in</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">tritonbackend.h</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/core/blob/main/include/triton/core/tritonbackend.h</span><span style="color:#24292E;--shiki-dark:#E1E4E8">).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">##### Single Response</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Most backends will create a single response for each request. For that</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">kind of backend, executing a single inference request requires the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">following steps:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Create a response for the request using TRITONBACKEND_ResponseNew.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> For each request input tensor use TRITONBACKEND_InputProperties to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  get shape and datatype of the input as well as the buffer(s)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  containing the tensor contents.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> For each output tensor which the request expects to be returned, use</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  TRITONBACKEND_ResponseOutput to create the output tensor of the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  required datatype and shape. Use TRITONBACKEND_OutputBuffer to get a</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  pointer to the buffer where the tensor's contents should be written.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Use the inputs to perform the inference computation that produces</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  the requested output tensor contents into the appropriate output</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  buffers.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Optionally set parameters in the response.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Send the response using TRITONBACKEND_ResponseSend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Release the request using TRITONBACKEND_RequestRelease.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For a batch of requests the backend should attempt to combine the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">execution of the individual requests as much as possible to increase</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">performance.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">##### Decoupled Responses</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">It is also possible for a backend to send multiple responses</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">for a request. A backend may also</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">send responses out-of-order relative to the order that the request</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">batches are executed. Such backends are called </span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*decoupled*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> backends.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The decoupled backends use one </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`ResponseFactory`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> object per request to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">create and send any number of responses for the request. They must send at</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">least one final response per request (even if it is a flags-only response).</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">You can send a flags-only response with TRITONBACKEND_ResponseFactorySendFlags.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">For this kind of backend, executing a single inference request typically requires</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the following steps:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">1.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> For each request input tensor, use TRITONBACKEND_InputProperties to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  get shape and datatype of the input as well as the buffer(s)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  containing the tensor contents.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">2.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Create a </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`ResponseFactory`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> object for the request using</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  TRITONBACKEND_ResponseFactoryNew.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">3.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Create a response from the </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`ResponseFactory`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> object using</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  TRITONBACKEND_ResponseNewFromFactory. As long as you have the</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  `ResponseFactory`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> object, you can continue creating responses.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">4.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> For each output tensor which the request expects to be returned, use</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  TRITONBACKEND_ResponseOutput to create the output tensor of the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  required datatype and shape. Use TRITONBACKEND_OutputBuffer to get a</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  pointer to the buffer where the tensor's contents should be written.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">5.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Use the inputs to perform the inference computation that produces</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  the requested output tensor contents into the appropriate output</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  buffers.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">6.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Optionally set parameters in the response.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">7.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Send the response using TRITONBACKEND_ResponseSend.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">8.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Repeat steps 3-7 until there are no more responses.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">9.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Send the last response for a request using either TRIONBACKEND_ResponseSend</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  with a TRITONSERVER_ResponseCompleteFlag or after all responses have been</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  sent for a request using TRITONBACKEND_ResponseFactorySendFlags.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">   This is required for every request.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">10.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Release the request using TRITONBACKEND_RequestRelease.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">###### Special Cases</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The decoupled API is powerful and supports various special cases:</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> The model can also send responses out-of-order in which it received</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  requests.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> The backend can copy out the contents of the input buffer(s) if</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  request is to be released before the contents are completely</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  consumed to generate responses. After copy, the request can be</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  released anytime before exiting TRITONBACKEND_ModelInstanceExecute.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  The copies and </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`ResponseFactory`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> object can be passed to a separate</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  thread in backend. This means main caller thread can exit from</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  TRITONBACKEND_ModelInstanceExecute and the backend can still continue</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  generating responses as long as it holds </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`ResponseFactory`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> object.</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">repeat example</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">examples/README.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) demonstrates full power of</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">what can be achieved from decoupled API.</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Study documentation of these TRITONBACKEND_* functions in</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">tritonbackend.h</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/core/blob/main/include/triton/core/tritonbackend.h</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">for more details on these APIs. Read</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Decoupled Backends and Models</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/server/blob/main/docs/user_guide/decoupled_models.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">for more details on how to host a decoupled model.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Build the Backend Utilities</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The source in this repo builds into a single "backend utilities"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">library that is useful when building backends. You don't need to use</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">these utilities but they will be helpful for most backends.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Typically you don't need to build this repo directly but instead you</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">can include it in the build of your backend as is shown in the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">CMakeLists.txt files of the [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">tutorial examples</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">examples/README.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">To build and install in a local directory use the following commands.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">$ mkdir build</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">$ cd build</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">$ cmake -DCMAKE_INSTALL_PREFIX:PATH=`pwd`/install ..</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">$ make install</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">The following required Triton repositories will be pulled and used in</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the build. By default the "main" branch/tag will be used for each repo</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">but the listed CMake argument can be used to override.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> triton-inference-server/common: -DTRITON_COMMON_REPO_TAG=[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> triton-inference-server/core: -DTRITON_CORE_REPO_TAG=[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">See the [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">CMakeLists.txt</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">CMakeLists.txt</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) file for other build options.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Python-based Backends</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton also provides an option to create [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Python-based backends</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">docs/python_based_backends.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">).</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">These backends should implement the</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`TritonPythonModel`</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline"> interface</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/python_backend#usage</span><span style="color:#24292E;--shiki-dark:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">which could be re-used as a backend by multiple models.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">While the only required function is </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`execute`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">you may find it helpful to enhance your implementation by adding </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`initialize`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">`finalize`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, and any other helper functions. For examples, please refer to</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">the [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">vLLM backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://github.com/triton-inference-server/vllm_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">which provides a common python script to serve models supported by vLLM.</span></span>
+<span class="line"></span></code></pre>

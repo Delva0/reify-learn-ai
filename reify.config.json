@@ -1,0 +1,39 @@
+{
+  "title": "Reify Learn AI",
+  "content": "./content",
+  "public": "./public",
+  "repositories": "./content/repositories.json",
+  "fileMaps": "./data/file-maps.json",
+  "home": "repos.html",
+  "navigationLabel": "仓库",
+  "pages": [
+    {
+      "id": "repos",
+      "source": "repos.mdx",
+      "page": "repos.html",
+      "title": "仓库笔记"
+    }
+  ],
+  "components": {
+    "BatchPlan": "./src/components/BatchPlan.astro",
+    "RuntimeState": "./src/components/RuntimeState.astro",
+    "Downloads": "./src/components/Downloads.astro"
+  },
+  "scripts": [
+    "./src/client.js"
+  ],
+  "mathAliases": {
+    "primary": [
+      "request",
+      "logical",
+      "host",
+      "dataedge"
+    ],
+    "secondary": [
+      "slot",
+      "storage",
+      "device",
+      "controledge"
+    ]
+  }
+}
