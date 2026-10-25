@@ -3,7 +3,7 @@
 独立的学习博客。文章、资源、源码依据、专用演示与写作规范保存在这里，使用本地框架依赖 `reify: file:../reify`。
 
 ```text
-/home/delva/projects/infra/
+workspace/
 ├── reify/              框架
 └── reify-learn-ai/     本博客
 ```
