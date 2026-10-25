@@ -17,12 +17,10 @@ unload:[['Triton 生命周期','ModelInstanceFinalize 删除实例状态和 Infe
 };$('#runtime-state').innerHTML=table(['运行时角色','此刻的状态'],rows[phase])+`<p>所有并发 BatchSplicTasks 调用在推理阶段额外创建的工作线程峰值 ≤ ${(r.P>1?r.P*r.maxRunning:0)}；整个 tritonserver 还包含调用线程和库内部线程。</p>`;}
 export function renderBatch(){if(!$('#batch-state'))return;const raw=$('#request-batches').value.split(',').map(s=>s.trim()),b=raw.map(Number),p=boundedInput('split-p',16);if(!raw.length||raw.length>20||raw.some((s,i)=>!s||!Number.isInteger(b[i])||b[i]<=0||b[i]>100000)){$('#batch-state').innerHTML='<p>输入正整数 batch 列表，逗号分隔；本演示最多 20 个请求。</p>';return;}const B=b.reduce((a,n)=>a+n,0),request=slices(b),worker=splitBatch(B,p);$('#batch-state').innerHTML=`<p><code>n=${b.length}，B=${B}，P=${p}，q=${Math.floor(B/p)}，u=${B%p}</code></p>`+table(['原请求 r','bᵣ','原请求区间 [aᵣ,aᵣ+bᵣ)'],request.map((s,i)=>[i,b[i],`[${s.start}, ${s.end})`]))+table(['Scheduler::Instance 索引 k','b̂ₖ','执行区间 [oₖ,oₖ+b̂ₖ)'],worker.map((s,i)=>[i,s.end-s.start,`[${s.start}, ${s.end})${s.start===s.end?' · 跳过计算':''}`]))+'<p>两套区间覆盖同一个 [0,B)，但切分边界不同。D2H 先写回总输出，Response 再按第一张表还原。</p>';}
 
-let initialized=false;
+let initialized=false;const bound=new WeakSet();
 export function initDemos(){
- if(initialized)return;initialized=true;
- for(const id of ['h','d','p','k'])$('#'+id)?.addEventListener('input',renderRuntime);
- for(const id of ['request-batches','split-p'])$('#'+id)?.addEventListener('input',renderBatch);
- document.addEventListener('click',event=>{const stage=event.target instanceof Element?event.target.closest('[data-phase]'):null;if(stage){phase=stage.dataset.phase;renderRuntime();}});
+ for(const id of ['h','d','p','k','request-batches','split-p']){const input=$('#'+id);if(input&&!bound.has(input)){bound.add(input);input.addEventListener('input',['request-batches','split-p'].includes(id)?renderBatch:renderRuntime);}}
+ if(!initialized){initialized=true;document.addEventListener('click',event=>{const stage=event.target instanceof Element?event.target.closest('[data-phase]'):null;if(stage){phase=stage.dataset.phase;renderRuntime();}});}
  renderRuntime();renderBatch();
 }
 

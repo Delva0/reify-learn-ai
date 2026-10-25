@@ -9,7 +9,7 @@
 ```
 
 ```sh
-node ../reify/cli.mjs dev --port 4180
+node ../reify/cli.mjs dev --port 4179
 node ../reify/cli.mjs build
 node ../reify/cli.mjs check
 ```

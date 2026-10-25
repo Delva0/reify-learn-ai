@@ -7,5 +7,5 @@ This is the independent learning blog. Its articles, resources, source evidence,
 - `reify.config.json` declares content, repository metadata, component registration, client scripts, and formula aliases.
 - Keep domain demonstrations in `src/`, source evidence in `data/`, and downloadable resources in `public/`.
 - Local dependency: `reify: file:../reify`. Do not copy its renderer into this project.
-- Build with `node ../reify/cli.mjs build`, verify with `node ../reify/cli.mjs check`, and preview with `node ../reify/cli.mjs dev --port 4180`.
+- Build with `node ../reify/cli.mjs build`, verify with `node ../reify/cli.mjs check`, and preview with `node ../reify/cli.mjs dev --port 4179`.
 - The former `../sites/ge-backend-explorer` checkout is a migration backup. Preserve it until the user asks to remove it.
