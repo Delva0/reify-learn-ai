@@ -1,0 +1,72 @@
+<pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># 贡献指南</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">本项目欢迎广大开发者体验并参与贡献，在参与社区贡献之前。请参见[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">cann-community</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://gitcode.com/cann/community</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)了解行为准则，进行CLA协议签署，了解源码仓的贡献流程。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">开发者准备本地代码与提交PR时需要重点关注如下几点：</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">1.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 提交PR时，请按照PR模板仔细填写本次PR的业务背景、目的、方案等信息。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">2.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 若您的修改不是简单的bug修复，而是涉及到新增特性、新增接口、新增配置参数或者修改代码流程等，请务必先通过Issue进行方案讨论，以避免您的代码被拒绝合入。若您不确定本次修改是否可被归为“简单的bug修复”，亦可通过提交Issue进行方案讨论。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">开发者贡献场景主要包括：</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 一、贡献新特性</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  若开发者基于此开源仓完成了新特性适配，或者发现BUG并修复，可参考如下流程进行PR提交：</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 1. 创建Issue需求</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">新建 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`Requirement|需求建议`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 类Issue，并阐明新增算子的设计方案。Issue一般需包含以下内容：</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold"> **背景信息**</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> </span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold"> **价值/作用**</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> </span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold"> **设计方案**</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">请在提交的Issue中评论</span><span style="color:#005CC5;--shiki-dark:#79B8FF">`/assign @yourself`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 认领该任务。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 2. PR提交</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">PR上库要求：</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 代码交付件：需提供相关特性代码，并在合理位置添加详细注释。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 开发者自测：需提供相关自测截图，证明新特性完整性。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 文档交付件：在当前基础上补充使用说明等内容，确保新特性被感知。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 合规检查：</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  -</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 代码是否符合《[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">C++ 编程规范</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://gitcode.com/cann/community/blob/master/contributor/coding-standards/C++%20Coding%20standards.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)》</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  -</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 代码是否编译通过</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">  -</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Markdown文档语法是否符合规范</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> PR提交：通过</span><span style="color:#005CC5;--shiki-dark:#79B8FF">`git`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">命令提交目标分支PR，检查PR标题是否清晰、PR描述是否规范（指明更改内容和原因、是否关联对应Issue）、是否签署CLA。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 3. CI门禁</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">通过评论 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`compile`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 指令触发开源仓门禁，并依据CI检测结果进行修改，目前CI门禁包含以下检查项：</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 代码编译</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 静态检查（如涉及codecheck误报，请提交给sig成员屏蔽）</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">门禁通过后，请在关联的Issue中@指派的Committer。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 4. Committer检视</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Committer检视后将反馈检视意见，请根据意见修改，完成后@指派的Committer。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 5. Maintainer合入</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Committer检视通过后，标注 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`/lgtm`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">标签。Maintainer将在1天内进行最终审核，确认无问题后，将标注 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`/approve`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 标签合入PR。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 二、Bug修复</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">如果您在本项目中发现了某些算子Bug，希望对其进行修复，欢迎您新建Issue进行反馈和跟踪处理。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">您可以按照[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">提交Issue/处理Issue任务</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://gitcode.com/cann/community#提交Issue处理Issue任务</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)指引新建 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`Bug-Report|缺陷反馈`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 类Issue对Bug进行描述，然后在评论框中输入“/assign”或“/assign @yourself”，将该Issue分配给您进行处理。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 三、文档纠错</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">如果您在本项目中发现某些算子文档描述错误，欢迎您新建Issue进行反馈和修复。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">您可以按照[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">提交Issue/处理Issue任务</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://gitcode.com/cann/community#提交Issue处理Issue任务</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)指引新建 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`Documentation|文档反馈`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 类Issue指出对应文档的问题，然后在评论框中输入“/assign”或“/assign @yourself”，将该Issue分配给您纠正对应文档描述。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 四、帮助解决他人Issue</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">如果社区中他人遇到的问题您有合适的解决方法，欢迎您在Issue中发表评论交流，帮助他人解决问题和痛点，共同优化易用性。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">如果对应Issue需要进行代码修改，您可以在Issue评论框中输入“/assign”或“/assign @yourself”，将该Issue分配给您，跟踪协助解决问题。</span></span></code></pre>

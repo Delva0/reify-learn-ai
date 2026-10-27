@@ -1,0 +1,151 @@
+<pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">cmake_minimum_required</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">VERSION</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 3.17)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">project</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(triton-npu-ge-backend LANGUAGES C CXX)</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ASCEND_DIR /usr/local/Ascend)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ASCEND_PATH /usr/local/Ascend/ascend-toolkit/latest)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ATC_INCLUDE_DIR </span><span style="color:#D73A49;--shiki-dark:#F97583">${ASCEND_PATH}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/</span><span style="color:#D73A49;--shiki-dark:#F97583">${ARCH}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">-linux/include)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ONNXRUNTIME_ROOT /opt/onnxruntime)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">message</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"current arch: ${ARCH}"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">option</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(TRITON_ENABLE_GPU </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Enable GPU support in backend"</span><span style="color:#D73A49;--shiki-dark:#F97583"> OFF</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">option</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(TRITON_ENABLE_STATS </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Include statistics collections in backend"</span><span style="color:#D73A49;--shiki-dark:#F97583"> ON</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(TRITON_COMMON_REPO_TAG </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"main"</span><span style="color:#D73A49;--shiki-dark:#F97583"> CACHE</span><span style="color:#D73A49;--shiki-dark:#F97583"> STRING</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "Tag for triton-inference-server/common repo"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(TRITON_CORE_REPO_TAG </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"main"</span><span style="color:#D73A49;--shiki-dark:#F97583"> CACHE</span><span style="color:#D73A49;--shiki-dark:#F97583"> STRING</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "Tag for triton-inference-server/core repo"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(TRITON_BACKEND_REPO_TAG </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"main"</span><span style="color:#D73A49;--shiki-dark:#F97583"> CACHE</span><span style="color:#D73A49;--shiki-dark:#F97583"> STRING</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "Tag for triton-inference-server/backend repo"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># 需根据实际路径填写</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ONNXRUNTIME_ROOT </span><span style="color:#D73A49;--shiki-dark:#F97583">${ONNXRUNTIME_ROOT}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">if</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">NOT</span><span style="color:#E36209;--shiki-dark:#FFAB70"> CMAKE_BUILD_TYPE</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#E36209;--shiki-dark:#FFAB70">CMAKE_BUILD_TYPE</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Release)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">endif</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">add_compile_options</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(-std=c++17)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">add_compile_options</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(-Wno-unused-parameter)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(CMAKE_CXX_STANDARD 17)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(CMAKE_CXX_STANDARD_REQUIRED </span><span style="color:#D73A49;--shiki-dark:#F97583">ON</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#E36209;--shiki-dark:#FFAB70">CMAKE_SKIP_RPATH</span><span style="color:#D73A49;--shiki-dark:#F97583"> TRUE</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (USE_CXX11_ABI)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#E36209;--shiki-dark:#FFAB70">CMAKE_CXX_FLAGS</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=1"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">else</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#E36209;--shiki-dark:#FFAB70">CMAKE_CXX_FLAGS</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">endif</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#E36209;--shiki-dark:#FFAB70">CMAKE_CXX_FLAGS</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "${CMAKE_CXX_FLAGS} -pipe -fstack-protector-all"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#E36209;--shiki-dark:#FFAB70">CMAKE_CXX_FLAGS</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "${CMAKE_CXX_FLAGS} -Wall -Wextra"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#E36209;--shiki-dark:#FFAB70">CMAKE_CXX_FLAGS</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "${CMAKE_CXX_FLAGS} -Wno-deprecated-copy"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#E36209;--shiki-dark:#FFAB70">CMAKE_CXX_FLAGS</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "${CMAKE_CXX_FLAGS} -fPIC -Wl,--build-id=none"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#E36209;--shiki-dark:#FFAB70">CMAKE_CXX_FLAGS</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "${CMAKE_CXX_FLAGS} -Wl,-z,relro,-z,now"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#E36209;--shiki-dark:#FFAB70">CMAKE_CXX_FLAGS</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "${CMAKE_CXX_FLAGS} -pie -fexceptions"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#E36209;--shiki-dark:#FFAB70">CMAKE_CXX_FLAGS</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "${CMAKE_CXX_FLAGS} -ftrapv"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># add_definitions(-D_GLIBCXX_USE_C99=1)</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># Dependencies</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># FetchContent requires us to include the transitive closure of all</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># repos that we depend on so that we can override the tags.</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">include</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(FetchContent)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">FetchContent_Declare(</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">repo-common</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">GIT_REPOSITORY https://github.com/triton-inference-server/common.git</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">GIT_TAG </span><span style="color:#D73A49;--shiki-dark:#F97583">${TRITON_COMMON_REPO_TAG}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">GIT_SHALLOW </span><span style="color:#D73A49;--shiki-dark:#F97583">ON</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">FetchContent_Declare(</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">repo-core</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">GIT_REPOSITORY https://github.com/triton-inference-server/core.git</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">GIT_TAG </span><span style="color:#D73A49;--shiki-dark:#F97583">${TRITON_CORE_REPO_TAG}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">GIT_SHALLOW </span><span style="color:#D73A49;--shiki-dark:#F97583">ON</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">FetchContent_Declare(</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">repo-backend</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">GIT_REPOSITORY https://github.com/triton-inference-server/backend.git</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">GIT_TAG </span><span style="color:#D73A49;--shiki-dark:#F97583">${TRITON_BACKEND_REPO_TAG}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">GIT_SHALLOW </span><span style="color:#D73A49;--shiki-dark:#F97583">ON</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">FetchContent_MakeAvailable(repo-common repo-core repo-backend)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># The backend must be built into a shared library. Use an ldscript to</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># hide all symbols except for the TRITONBACKEND API.</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">LINK_DIRECTORIES</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">$ENV{TRITON_HOME_PATH}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/lib</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">INCLUDE_DIRECTORIES</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">${ASCEND_DIR}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/ascend-toolkit/latest/</span><span style="color:#D73A49;--shiki-dark:#F97583">${ARCH}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">-linux/include</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># onnxruntime</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">include_directories</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">${ONNXRUNTIME_ROOT}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/include)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">link_directories</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">${ONNXRUNTIME_ROOT}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/lib)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">file</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(GLOB_RECURSE SOURCE_FILES </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">add_library</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(triton-npu-ge-backend SHARED </span><span style="color:#D73A49;--shiki-dark:#F97583">${SOURCE_FILES}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">add_library</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">triton-npu-ge-backend::triton-npu-ge-backend ALIAS triton-npu-ge-backend</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">target_include_directories</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">triton-npu-ge-backend</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">PRIVATE</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    ${CMAKE_CURRENT_SOURCE_DIR}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/include</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    /usr/local/Ascend/code/json/json/include/  </span><span style="color:#6A737D;--shiki-dark:#6A737D"># json安装目录</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    ${ASCEND_PATH}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/opp/built-in/op_proto/inc</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    ${ATC_INCLUDE_DIR}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/graph</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    ${ATC_INCLUDE_DIR}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/ge</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    ${ATC_INCLUDE_DIR}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/parser    </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    ${ATC_INCLUDE_DIR}</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    ${ASCEND_PATH}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/compiler/lib64/stub</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    ${ASCEND_PATH}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/runtime/include/</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">target_compile_features</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(triton-npu-ge-backend </span><span style="color:#6F42C1;--shiki-dark:#B392F0">PRIVATE</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> cxx_std_11)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">target_link_directories(triton-npu-ge-backend </span><span style="color:#6F42C1;--shiki-dark:#B392F0">PRIVATE</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    ${ASCEND_PATH}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/compiler/lib64/stub</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    ${ASCEND_PATH}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/</span><span style="color:#D73A49;--shiki-dark:#F97583">${ARCH}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">-linux/devlib/linux/</span><span style="color:#D73A49;--shiki-dark:#F97583">${ARCH}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">target_link_libraries</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">triton-npu-ge-backend</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">PRIVATE</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    triton-core-serverapi   </span><span style="color:#6A737D;--shiki-dark:#6A737D"># from repo-core</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    triton-core-backendapi  </span><span style="color:#6A737D;--shiki-dark:#6A737D"># from repo-core</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    triton-core-serverstub  </span><span style="color:#6A737D;--shiki-dark:#6A737D"># from repo-core</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    triton-backend-utils    </span><span style="color:#6A737D;--shiki-dark:#6A737D"># from repo-backend</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    ascendcl</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    graph</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    ge_compiler</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    fmk_onnx_parser</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    fmk_parser</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    ge_runner</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    onnxruntime</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">set_target_properties</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">triton-npu-ge-backend PROPERTIES</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">OUTPUT_NAME</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> triton_npu_ge</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># Install</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">install</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">TARGETS</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">triton-npu-ge-backend</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">DESTINATION </span><span style="color:#D73A49;--shiki-dark:#F97583">$ENV{TRITON_HOME_PATH}</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/backends/npu_ge</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"></span></code></pre>

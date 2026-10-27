@@ -1,0 +1,261 @@
+<pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># 性能调优方法论</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">模型优化有一套通用的流程，本文档首先介绍一下通用的优化手段，然后再以cnclip模型为例，为大家提供模型接入、运行、优化整体过程。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># 优化步骤总结</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 1. 开启小batch自动合并模式</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">triton server 支持在高吞吐模式下在用户设置的间隙时间内若存在多个小batch请求，将其合并为大batch，从而提高NPU利用率。以cnclip模型的image过程为例，在config.pbtxt中配置动态batch参数：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">``` json</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">dynamic_batching {</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">  max_queue_delay_microseconds</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#005CC5;--shiki-dark:#79B8FF">10000</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">  #</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> 等待合并的最大延迟（微秒），可调整</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">  preferred_batch_size:</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">8</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]    </span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">#</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> 优先合并成这些batch_size（可选）</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 注：此模式只支持0轴为bs动态轴，其余轴固定的情况！！！   </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">该参数含义如下：在10ms内，若多个request可以合并为 4,8 大小的batch则将其合并后计算。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">若所有请求均为1bs：则当达到4bs时将会执行，不会到达8bs，所以要根据请求情况进行调整；若经过测试，在8bs时吞吐最好，则建议preferred_batch_size 仅保留 8。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">若请求均为随机：则根据请求顺序进行拼接，达到 4,8 bs的请求会被合并，从而加快计算。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在理想情况下，比如我们用8个并发，每个请求1bs，则如果8个并发恰好在10ms内请求到server，则会被合并成一个8bs的推理任务，推理完成后再拆分分别响应。这样做的前提是处理8个1bs推理任务要比1个8bs的任务耗时长才有收益。所以在填写之前，用户需要自行测试亲和batch进行填写。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">因8个请求在理想情况下合并为1个推理任务，一张NPU建议stream不大于8，那么在最理想的情况下8个stream可以处理8*8个请求，也就是64个并发任务。我们将config中的count等信息做如下修改：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">``` json</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">instance_group [{</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">  count</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#005CC5;--shiki-dark:#79B8FF">8</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">parameters: [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">  key</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"device_ids"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">  value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: {</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">string_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"2"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">parameters: [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">  key</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"device_exec_blocks"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">  value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: {</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">string_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"8"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">count 决定创建的实例数量，每个实例对应一条 stream，因此直接将 count 设置为 8，即可与单卡建议的 stream 数（不超过 8）保持一致，无需再开更多 stream；device_exec_blocks 参数用于限制每张卡上支持的流水数量，这里同样设为 8。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在1张卡的情况下，8 个实例在理想情况下各将 8 个请求动态合并为 1 个推理任务，因此最多可支撑 8*8=64 个并发请求；当吞吐率较高时，请求会被合并成刚好由 8 条 stream 处理，此时达到最优吞吐。若把 count 设置得比 8 更大，多出的实例并不会提升吞吐，只是增加等待队列、在出现空闲流时第一时间占用，因此 count 设为 8 即可。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">测试数据：  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在不开启小batch动态合并时，用1bs，1并发，测试：   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Request concurrency: 1</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  Client: </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Request count: 3445</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Throughput: 191.355 infer/sec</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Avg latency: 5224 usec (standard deviation 306 usec)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    p50 latency: 5220 usec</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    p90 latency: 5393 usec</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    p95 latency: 5677 usec</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    p99 latency: 6408 usec</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Avg HTTP time: 5218 usec (send/recv 110 usec + response wait 5108 usec)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  Server: </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Request count: 0</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Inferences/Second vs. Client Average Batch Latency</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Concurrency: 1, throughput: 191.355 infer/sec, latency 5224 usec</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">因动态图每一节点tiling计算在CPU侧，在机选完成后才能发送至NPU执行，所以在单流1bs下性能较差。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在开启小batch合并，且用1bs，64并发，测试：   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Request concurrency: 64</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  Client: </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Request count: 23940</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Throughput: 1329.13 infer/sec</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Avg latency: 48084 usec (standard deviation 13285 usec)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    p50 latency: 47319 usec</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    p90 latency: 49055 usec</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    p95 latency: 49707 usec</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    p99 latency: 51560 usec</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Avg HTTP time: 48075 usec (send/recv 319 usec + response wait 47756 usec)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  Server: </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Request count: 0</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Inferences/Second vs. Client Average Batch Latency</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Concurrency: 64, throughput: 1329.13 infer/sec, latency 48084 usec</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">可以看到性能提升明显， 通过profiling分析：   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">![](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./figures/dynamic_batch_combine.png</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">可以看出在64条请求并发情况下，NPU使用率有明显提升，空泡减少明显。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">该优化也可叠加锁核方式，提高p99指标。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;font color="#dd0000"> 注意：   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">此方法虽吞吐效果明显，但在整体考虑资源时需要合理规划。此方法是通过CPU换NPU性能，目前仅测试单张卡就使用了64核，若考虑一台服务器有8张卡，如果均使用此种方式，性能肯定无法达到8*单张吞吐。所以需要用户综合考虑使用场景，调整并发度。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;/font></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 1.1 使用分档模式</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">当请求中可以确定bs &#x3C;= 最大亲和bs 时，如上示例中 max_batch_size &#x3C;= max [2, 4, 8] , 我们可以尝试通过分档，将不同bs大小生成静态图，从而支持图下沉方式推理，进一步提高吞吐。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">比如 preferred_batch_size: [2, 4, 8] ， 那在理想情况下， 请求会被合并成 2,4,8 bs 进行推理，但在某些时段，由于请求数量少，无法拼接为2,4,8 时，就会有可能形成1,3,5,6,7 bs 长度的请求。所以在配置分档时，要确保分档能覆盖所有bs。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">开启方式可通过config.pbtxt 或者 命令行参数生效，如上例子，模型有1个输入，shape信息为image:[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">-1,3,224,224</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]，则配置示例为：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">parameters: [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  key: "graph.ge.inputShape",</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  value: {string_value: "image:-1,3,224,224"}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">parameters: [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  key: "graph.ge.dynamicDims",</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  value: {string_value: "1;2;3;4;5;6;7;8"}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">parameters: [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  key: "graph.ge.dynamicNodeType",</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  value: {string_value: "1"}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">或者通过在命令行后添加参数进行使能：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,graph.ge.inputShape="image:-1,3,224,224" \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,graph.ge.dynamicDims="1;2;3;4;5;6;7;8"  \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,graph.ge.dynamicNodeType="1"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">若input为多个，可参考 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Ascend Graph构图接口 options参数说明</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://www.hiascend.com/document/detail/zh/canncommercial/850/API/ascendgraphapi/atlasgeapi_07_0150.html</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) 进行详细配置。   </span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 注：dynamicDims 数量过多会导致模型编译过程变长。</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 1.2 尝试锁核</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在小batch场景下，小模型每条流使用完整核会有较大的启动开销，也就是通过控制使用较小核数量，可以通过降低启动开销来进一步提高吞吐率。使能方法支持config.pbtxt以及命令行参数：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">``` bash</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">parameters:</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  key:</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "ge.aicoreNum",</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  value:</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> {string_value:</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "12|10"}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">或</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">``` bash</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">npu_ge,ge.</span><span style="color:#24292E;--shiki-dark:#E1E4E8">aicoreNum</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"12|10"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">其中 12|10 代表 每条流使用12个cube核，10个vector核。不同产品型号昇腾AI处理器包含的最大AICore-CubeCore与AICore-VectorCore的数量可从"${INSTALL_DIR}/\&#x3C;arch</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\></span><span style="color:#24292E;--shiki-dark:#E1E4E8">-linux/data/platform_config/xxx.ini"文件查看。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">具体值填写多少需根据模型本身整体运行占用CV核情况进行调整，过大、过小均会影响吞吐，可以通过调整后进行性能测试来逐步逼近最优值。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">详细说明可参考 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Ascend Graph构图接口 options参数说明</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://www.hiascend.com/document/detail/zh/canncommercial/850/API/ascendgraphapi/atlasgeapi_07_0150.html</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) 进行详细配置。   </span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 2. 动态图转静态图</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">当推理场景不存在动态batch场景，则可考虑使用静态图进行推理。(若bs始终为1，可考虑使用小batch合并进行优化，效果要比直接使用该章节吞吐率好)。onnx模型在编译完成后，默认使用动态图模式，此模式下因input中可能存在动态shape，所以无法在编译阶段完全计算出每个节点所需显存资源，需要根据真实的input进行动态计算，计算显存大小过程在CPU侧，所以很可能出现CPU侧导致的HostBound，为了使性能达到最优，如果我们的input可以改为静态shape，则可以使其在编译阶段直接计算出每个节点所需显存资源，执行过程可以下沉至NPU中，此时执行过程中CPU不再参与运算，从而达到NPU的利用率最大化。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">静态图GE支持分档场景以及全静态场景：   </span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 2.1 分档场景</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">若input中非bs轴存在动态轴，且具体shape为固定档位，比如cnclip模型image shape[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">1,3,-1,1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">], 后两个轴取值只有 224,224 或 336,336， 则可通过分档方式，将执行图转为静态图。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">parameters: [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  key: "graph.ge.inputShape",</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  value: {string_value: "image:1,3,-1,-1"}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">parameters: [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  key: "graph.ge.dynamicDims",</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  value: {string_value: "224,224;336,336"}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">parameters: [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  key: "graph.ge.dynamicNodeType",</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  value: {string_value: "1"}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">或者通过在命令行后添加参数进行使能：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,graph.ge.inputShape="image:1,3,-1,-1" \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,graph.ge.dynamicDims="224,224;336,336"  \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,graph.ge.dynamicNodeType="1"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">详细说明可参考 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Ascend Graph构图接口 options参数说明</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://www.hiascend.com/document/detail/zh/canncommercial/850/API/ascendgraphapi/atlasgeapi_07_0150.html</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) 进行详细配置。  </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 2.2 全静态场景 </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">非动态分档场景指模型输入shape均为标量。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">通过config添加配置：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```json</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">parameters:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">  key</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"static_model"</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">  value:</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">string_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"1"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">或通过启动参数配置</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">npu_ge,</span><span style="color:#24292E;--shiki-dark:#E1E4E8">static_model</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"1"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">即可使能静态图。具体使用哪种请自行选择。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">具体是否生效，需要采集Profiling，查看是否所有节点均为static。采集工具请参考 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Profiling 工具使用</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./tools/Profiling.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 3. 模型优化</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">动态图转静态图Netron 查看是否有无需计算的节点，转静态图后，某些节点可能导致静态图回到动态图，定位手段就是采集Profiling，以CN_CLIP模型为例，当用原始的model直接开启静态图模式后，通过分析Profiling结果，结合Netron，是否整图可以下沉，哪些节点可以删除。如上一节中的删除Mod节点，目的是让全图下沉。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在转静态图后，某些模型可能存在大片节点变成了固定值，但编译器无法自动优化，需要我们去做分析，一部分可以通过人工编辑onnx图，也可以通过辅助工具来实现，在实践过程中，我们发现onnxsim可以将一些固定节点向下合并，可以消除如Mod等输入都是固定的节点，从而优化模型。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">CN_CLIP通过onnxsim工具的优化结果如下：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">![](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./figures/cnclip_7.png</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">可以看出，CN_CLIP经过优化后，把Mod等固定的计算节点进行了优化，比原始图少了好多节点。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*注：MindStudio和Netron工具安装与使用方法见[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">附录</span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./附录.md</span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">)。*</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 3. 多流并行+锁核</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">当用户在 config中用户设置 instance_group.count 的值>1 时，无论动态图模式或者静态图模式，采用多流并行方式执行。 建议 count值不要过大，会影响单个推理稳定性，造成p99变大。推荐不要超过8。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">当采用动态图模式时，CPU侧需要动态计算每一个节点输入的shape，无法实现最大吞吐，所以如果在动态图模式下通过调整count无法达到吞吐指标，可以尝试转静态图后观察吞吐情况。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">目前GE图模式实现了锁核能力，也就是可以限制某一个Stream只使用其中一部分Vector核一部分Cube核，这样剩下的资源可以让其他Stream使用；算子在启动core的过程中使用的core越多消耗越大，而对于小模型，特别是小shape场景，用整个核其实存在资源浪费情况，如果能合理切分，让多条流同时使用CV核，反而要比只让一个Stream使用效果要好。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">常用锁核参数（C|V）有：“12|10”、“7|10”等，这些参数都是经验值，也可以根据实际模型测试找到最佳锁核值。本框架锁核功能可通过如下命令参数开启：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">npu_ge,ge.</span><span style="color:#24292E;--shiki-dark:#E1E4E8">aicoreNum</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"12|10"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 注：芯片型号不同，对应的CV核数也不一样。CV核数不能大于本芯片的CV核数，具体芯片CV核数请参考 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Ascend Graph构图接口 options参数说明</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://www.hiascend.com/document/detail/zh/canncommercial/850/API/ascendgraphapi/atlasgeapi_07_0150.html</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 4. 自动融合</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">自动融合在某些场景下会有性能收益，使用方法也比较简单，通过环境变量即可激活，目前已包含在CANN版本中。正式环境变量使用样例：</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">1.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 功能控制</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">export</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> AUTOFUSE_FLAGS</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"--enable_autofuse=true;--autofuse_disable_pass=reduce,concat,slice;--autofuse_enable_pass=transpose;--autofuse_att_algorithm=xx"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">2.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> DFX控制</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">export</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> AUTOFUSE_DFX_FLAGS</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"--att_accuracy_level=1;--att_profiling=true;--autofuse_enable_dump_orign_graph=true"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">具体如何使用请参考[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">AutoFuse自动融合</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://www.hiascend.com/document/detail/zh/canncommercial/850/graph/autofuse/autofuse_1_0001.html</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 5. 尝试使用float16推理</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">若使用onnx转om进行推理时，默认atc会使用float16进行优化。当前框架为保证精度默认使用图原始精度(origin)进行推理，若使用float16进行推理，可显著提高推理性能，使能float16后，要系统性测试精度是否达标，若精度满足要求则可保留。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">使能方法支持config.pbtxt以及命令行参数：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">parameters:</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  key:</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "session.ge.exec.precision_mode_v2",</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  value:</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> {string_value:</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "fp16"}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">或</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">npu_ge,session.ge.exec.</span><span style="color:#24292E;--shiki-dark:#E1E4E8">precision_mode_v2</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"fp16"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">详细说明可参考 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Ascend Graph构图接口 options参数说明</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://www.hiascend.com/document/detail/zh/canncommercial/850/API/ascendgraphapi/atlasgeapi_07_0150.html</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) 进行详细配置。  </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 6. ENSEMBLE</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在执行模型推理的过程会出现预处理后的数据量大于原始数据量，增加数据耗时，甚至导致传输 Bound，进而影响端到端吞吐率。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Triton Inference Server原生支持python backend和Ensemble能力，这样可以将多个不同模型（后端可以不同）串联起来形成一条推理流水线。通过将模型的前后处理封装成python model可以降低传输数据量，避免传输Bound情况的出现。其改造如下所示：  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">![](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./figures/ensemble_1.png</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">详细使用可参考下方优化案例。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 7. 融合PASS</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在所有优化手段都使用后，如果性能仍不达标，就需要具体分析耗时长算子、或者看哪些算子能融合，这个代价就比较高，需要打开具体的模型图，分析哪些算子执行过程可以做融合，通过编写融合算子以及融合Pass，替换GE图中某些节点，从而优化整网性能，此类方法一般在性能要求比较高的模型中进行，或者因当前NPU存在短板，比如对int64支持不佳等场景下，需要手工写新的算子进行全局替换，进行优化。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*注：相关文档可参考昇腾官方文档：[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">自定义pass开发</span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850/graph/graphdevg/atlasag_25_0027.html</span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">).*</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># 优化案例</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">性能优化可参考 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">CN_CLIP模型优化示例</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">CN_CLIP模型优化示例.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"></span></code></pre>

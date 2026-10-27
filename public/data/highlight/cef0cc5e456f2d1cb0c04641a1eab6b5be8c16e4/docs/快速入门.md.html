@@ -1,0 +1,313 @@
+<pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># 快速开始</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">本文档通过实例，展示模型文件制作、服务启动、尝试推理、性能测试整个流程，帮助用户快速熟悉、使用本插件。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 环境准备</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">若使用910B或310P，可以直接在AscendHub获取相关容器运行，其余型号可根据以下教程制作。   </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### AscendHub 镜像获取</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">登录昇腾镜像仓库 https://www.hiascend.com/developer/ascendhub   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">搜索 "triton-inference-server-ge-backend"  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">根据昇腾卡片信息选择选择相应的镜像版本(目前仅上传910B、310P基于cann8.3.rc1的版本，其余版本需要用户自行生成镜像)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 自制镜像</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">项目中提供了910B的镜像制作文件，可参考项目中的'Dockerfile' 进行创建。若使用不同型号、不同版本cann，需自行更换初始镜像。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 进入容器</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">执行以下命令进入容器：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">docker run -itd --privileged --name=triton_npu --net=host --shm-size=500g \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    --device /dev/davinci1 \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    --device /dev/davinci_manager \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    --device /dev/devmm_svm \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    --device /dev/hisi_hdc \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    -v /usr/local/dcmi:/usr/local/dcmi \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    -v /usr/local/bin/npu-smi:/usr/local/bin/npu-smi \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    -v /usr/local/Ascend/driver/lib64/:/usr/local/Ascend/driver/lib64/ \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    -v /usr/local/Ascend/driver/version.info:/usr/local/Ascend/driver/version.info \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    -v /etc/ascend_install.info:/etc/ascend_install.info \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    -v /data/:/data/ \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    -v /home/:/home/ \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    -it {镜像名称} bash</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">docker exec -it triton_npu bash</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 编译 ge backend </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">若使用AscendHub镜像，相关二进制已放在/opt/tritonserver 相关目录下，无需二次编译。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">若自行编译，需参考Dockerfile进行环境配置后，执行以下指令进行编译：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">git clone https://gitcode.com/cann/triton-inference-server-ge-backend.git</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">cd triton-inference-server-ge-backend</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">bash build.sh</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">执行完成后，会在 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`TRITON_HOME_PATH`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">（默认 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`/opt/tritonserver`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">）的 backends 目录下创建 npu_ge 文件夹以及相关的 .so 文件</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 编译环境要求</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">编译前请确保以下依赖已正确安装并配置好环境变量：</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 依赖 | 安装路径 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | --- | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| CANN toolkit | </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`/usr/local/Ascend/ascend-toolkit/latest`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> | 编译前需执行 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`source set_env.sh`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| onnxruntime | </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`/opt/onnxruntime`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> | 版本建议 1.23.2 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| Triton Inference Server | </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`$TRITON_HOME_PATH`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">（如 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`/opt/tritonserver`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">） | 需已安装，编译产物会放入其 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`backends/`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 目录 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| Python3 + torch | — | </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`build.sh`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 通过 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`torch.compiled_with_cxx11_abi()`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 自动判断 CXX11 ABI，torch 缺失会编译失败 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 编译参数说明</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">`build.sh`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 支持以下参数，可通过 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`bash build.sh --help`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 查看：</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数 | 默认值 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | --- | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`--build-type &#x3C;类型>`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> | </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`Release`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> | 构建类型，可选 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`Release`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 或 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`Debug`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`--incremental`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> | 关闭（全量构建） | 增量编译；默认会先清空 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`build/`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 目录 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`--tritonserver-version &#x3C;版本号>`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> | </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`r24.02`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> | Triton Inference Server 版本号，同时作为 common / core / backend 仓库的 git tag |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`--tritonserver-home-path &#x3C;路径>`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> | </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`/opt/tritonserver`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> | Triton 安装路径；也可通过环境变量 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`TRITON_HOME_PATH`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 指定 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`--help`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> | — | 显示帮助信息 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;font color="#dd0000"> 注意：&#x3C;/font> </span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> `--tritonserver-version`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 指定的是整个 Triton Inference Server 的版本号（如 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`r24.02`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">），对应官方各仓库（common / core / backend）的 git tag，非 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`tritonserver`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 二进制的版本号。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 编译示例</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># 默认参数编译（r24.02, Release）</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">bash</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> build.sh</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># 指定 Triton 版本编译</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">bash</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> build.sh</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> --tritonserver-version</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> r24.02</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># Release 增量编译</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">bash</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> build.sh</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> --build-type</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> Release</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> --incremental</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 执行推理</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">目前项目统一需要将模型转换为onnx或TensorFlow的冻结图pb文件进行在线编译。</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### Torch模型转换为onnx</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">因昇腾目前适配并不支持最新的onnx版本，相关模型若要在NPU上推理需要用户自行导出，不要使用官方下载的onnx文件，有可能会导致模型编译、推理报错！！！    </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">可使用torch自带能力进行导出，导出</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">``` python</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">import</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> torch.onnx</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">torch.onnx.export(model,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            (image, text),</span></span>
+<span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">            'model.onnx'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">            input_names</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'image'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'text'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">            output_names</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'unnorm_image_features'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"unnorm_text_features"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">            dynamic_axes</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">                'image'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"bs"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"width"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"height"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">                'text'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"bs"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">                'unnorm_image_features'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"bs"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"width"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"height"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">                'unnorm_text_features'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"bs"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"width"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"height"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            },</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">            export_params</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">True</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">            do_constant_folding</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">False</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">            opset_version</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">14</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">            verbose</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">True</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">其中：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model.onnx 为生成的onnx文件名称；  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input_names 为对应的入参名称；  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">output_names 为对应的出参名称；  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">opset_version 为使用的编译版本，默认建议选择14版本。具体请参考昇腾文档；  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">dynamic_axes 为动态轴，比如image 的第0轴为 batchsize，则需要声明 {0:"bs"}。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">其余字段若有疑问请参考官方文档 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">torch.onnx.export 接口说明</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://docs.pytorch.org/docs/stable/onnx.html</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;font color="#dd0000"> 注意：&#x3C;/font>   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">当前版本仅支持0轴为bs。 非0轴支持动态，但为了支持NPU计算过程，需要声明时满足output中出现的轴名称在input中存在，或output中的轴名称为计算过程，可以通过input中已存在的值进行计算得出   </span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 例1：output值 'unnorm_text_features':{0:"bs", 2："width", 3："height"} 中出现的所有动态轴名称在input中均存在；   </span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 例2：output值 'unnorm_text_features':{0:"bs", 2："width</span><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*3600/2+height"} 中2轴为计算公式，可以通过计算得出相应的轴大小。当前仅支持 +-*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">/() 运算符。   </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">执行完成后会在当前路径下生成 model.onnx 模型文件。  </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">生成的onnx文件可以使用 onnxsim 工具进行优化。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">pip install onnxsim </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">onnxsim  model.onnx new_model.onnx</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">执行完成后会输出前后节点对比。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### 附录：插件支持shape类型</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|  onnx文件shape | 示例 | config配置情况  |  支持情况  |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|  ------  | ------   |------   |------   |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|  全静态 | [1, 3, 224, 224] | 手动配置为[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">1,3,224,224</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] | 支持动态图、静态图 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|  全静态 | [1, 3, 224, 224] | 未配置 | 支持动态图、静态图 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|  0轴为Batch轴，其余固定shape | [bs, 3, 224, 224] | 手动配置为[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">1,3,224,224</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] | 支持动态图、静态图 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|  0轴为Batch轴，其余固定shape | [bs, 3, 224, 224] | 手动配置为[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">-1,3,224,224</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] | 支持动态图、静态图(拆分多batch为多个1batch进行计算) |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|  0轴为Batch轴，其余固定shape | [bs, 3, 224, 224] | 未配置 | 支持动态图、静态图(拆分多batch为多个1batch进行计算) |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|  0轴为Batch轴，其余轴有-1 | [bs, 3, width, height] | 手动配置为[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">1,3,224,224</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] | 支持动态图、静态图 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|  0轴为Batch轴，其余轴有-1 | [bs, 3, width, height] | 手动配置为[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">-1,3,224,224</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] | 支持动态图、静态图(拆分多batch为多个1batch进行计算) |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|  0轴为Batch轴，其余轴有-1 | [bs, 3, width, height] | 手动配置为[-1,3,-1, -1] | 支持动态图，静态图不支持 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|  无batch轴，存在-1 | input0[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">m,k</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]、input1[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">k,n</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]、output[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">m,n</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] | 手动配置为静态[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">2,3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">],[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">3,4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] | 支持动态图，静态图 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|  无batch轴，存在-1 | input0[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">m,k</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]、input1[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">k,n</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]、output[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">m,n</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] | 手动配置为[-1, -1],[-1, -1] | 支持动态图，静态图不支持 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|  无batch轴，存在-1 | input0[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">m,k</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]、input1[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">k,n</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]、output[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">m,n</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] | 未配置 | 支持动态图，静态图不支持 |</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 根据规范，若config中配置了max_batch_size>0 则默认0轴为BS轴，在配置中无需配置BS轴，比如input0的shape[-1, 3, 224, 224]，若配置了max_batch_size: 8,则input0 的shape配置为[3, 224, 224]; 若max_batch_size=0 或未配置，则用户需要明确bs轴为固定值或 -1。</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### TensorFlow模型转换为pb</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">TensorFlow保存图graph、权重weights的过程称为freezing，在保存过程中会产生一个protobuf文件，简称pb文件。导出并保存pb文件的方法使用的是原生TensorFlow框架的能力，下面仅简要给出一些步骤示例。  </span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">1.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 保存SavedModel模型。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">tf.saved_model.save(network, "save_path")</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在save_path文件夹下会生成如下文件/文件夹：   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|--- save_model.pb     # 保存网络结构</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|--- variables         # 权重参数存储目录</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|--- assets            # 所需的外部文件存储目录，例如初始化的词汇表文件</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">2.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 冻结pb模型。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">加载上述步骤导出的SavedModel模型，并将SavedModel模型冻结为带权重的pb模型，代码示例如下。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">``` python</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">import</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> tensorflow </span><span style="color:#D73A49;--shiki-dark:#F97583">as</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> tf</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">from</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> tensorflow </span><span style="color:#D73A49;--shiki-dark:#F97583">import</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> keras</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">from</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> tensorflow.keras </span><span style="color:#D73A49;--shiki-dark:#F97583">import</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> models</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">from</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> tensorflow.python.framework.convert_to_constants </span><span style="color:#D73A49;--shiki-dark:#F97583">import</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> convert_variables_to_constants_v2</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">from</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> tensorflow.python.framework </span><span style="color:#D73A49;--shiki-dark:#F97583">import</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> graph_util</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># 加载SavedModel模型</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">saved_model_dir </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "save_path"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> tf.saved_model.load(saved_model_dir)</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># 初始化signatures</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">infer </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> model.signatures[</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"serving_default"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># 冻结带权重的pb文件</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">frozen_func </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> convert_variables_to_constants_v2(infer)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">tf.io.write_graph(</span><span style="color:#E36209;--shiki-dark:#FFAB70">graph_or_graph_def</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">frozen_func.graph,</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">                     logdir</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"./"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">                     name</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"frozen_graph.pb"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">                     as_text</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">False</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">详细Tensorflow迁移请参考 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">TensorFlow模型迁移</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://www.hiascend.com/document/detail/zh/TensorFlowCommunity/850/migration/tfmigr2/tfmigr2_000077.html</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 尝试运行</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">模型文件获取后，即可尝试使用triton inference server进行推理服务。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">根据triton inference server规范，模型需要按照如下规范创建相应说明文件。</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### 模型目录创建</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">创建一个模型文件夹类似如下结构。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">models</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">└── cnclip</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    ├── 1</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    │   └── model.onnx # 或 model.pb</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    └── config.pbtxt</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">其中 ：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">cnclip 为模型名称</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">1 为模型版本   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model.onnx 或 model.pb 为需要执行推理的模型文件  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">config.pbtxt 为模型描述，具体填写内容如下：  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">name: "cnclip"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backend: "npu_ge"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">max_batch_size: 128</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input [ </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    name: "image"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    dims: [3, 224, 224  ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">output [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    name: "unnorm_image_features"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    dims: [512 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">instance_group [{ </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  count: 1</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">parameters: [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  key: "device_ids",</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  value: {string_value: "2"}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">其中：  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">name 为模型名称、与models内文件夹名称保持一致  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backend: 需填写npu_ge ，引导server 使用该backend对模型进行推理</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">max_batch_size 最大bs，当第0轴为bs时填写，若采用静态图，该字段需删除</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input、output 模型输入、输出名称、形状、类型等信息。需与onnx模型中的输入输出一致。否则会报错！！！   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input、output 若不填写，则程序会尝试从onnx文件中读取，支持动态轴方式，但要满足限制条件，详情请参考 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Torch模型转换为onnx</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#Torch模型转换为onnx</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)。 &#x3C;font color="#dd0000">Tensorflow 目前不支持自动获取。&#x3C;/font>   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">instance_group.count 实例数量，测试阶段可设置为1，若后期采用多流并行方案，或者多卡推理时，需要根据需要调整实例个数   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">parameters.device_ids 模型使用的卡id，若为多卡比如 2卡、3卡，则填写 2,3   </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">当前版本支持动态bs，以及全静态方式。静态图通常拥有更好的性能，用户可根据业务需要进行选择：  </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">1，若bs 为动态，可以通过配置 max_batch_size 限定最大batch，</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input、output中第0轴不需要声明，比如上面示例中，image 为4维，0轴为bs，不需要声明。规范跟随triton inference server。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">2，若bs为静态，则需要去掉 max_batch_size 并在input，output中声明第0轴的大小，如上例子 dims: [1，3, 224, 224  ]，静态图需要用户自行填写input、output。  </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在input、output全为固定shape的情况下，可以添加参数开启静态图推理：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">parameters: [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  key: "static_model",</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  value: {string_value: "1"}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### 模型启动</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">注：运行server时工作目录不要在models文件夹下执行，因执行过程中会生成meta文件导致server读取模型执行报错。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">模型文件夹生成后，即可执行如下命令尝试运行推理服务：  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">/opt/tritonserver/bin/tritonserver --model-repository {/path/to/models} \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--http-port=9000 --grpc-port=9002 \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,ge.aicoreNum="12|10" \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,static_model="1" \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,profiling="dynamic" \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,dump_graph="1"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--model-repository 为模型文件夹路径，如上章节介绍，应填写 models 的路径。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">可用参数可参考 triton inference server 相关文档。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在官方基础上，该插件新增了如下参数：  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,ge.aicoreNum 可以配置在启用静态图时，单stream使用cube、vector核数量，| 左边为cube数量，右边为vector数量，建议根据模型cv使用情况进行调整。默认关闭。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,static_model 是否开启ge静态图，只有在shape全部为固定值时才能开启，config.pbtxt 也可以配置，只需配置一个。默认不开启。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,profiling 是否开启profiling，若为ture，则采用静态采集，程序运行后立刻开始，若为dynamic，则需要使用另一线程，具体可参考昇腾文档。 开启后会在当前目录下生成profiling文件夹。默认关闭。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,dump_graph 是否dump GE图，默认关闭。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;font color="#dd0000"> 注意：ge参数分全局、session、graph 参数，当直接填写ge.xxx 时会被作为全局参数；当添加 session.ge.xxx 或 graph.ge.xxx 是会分别被作为 session、graph 参数。具体支持哪些参数请参考 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Ascend Graph构图接口 options参数说明</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://www.hiascend.com/document/detail/zh/canncommercial/850/API/ascendgraphapi/atlasgeapi_07_0150.html</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) 。   &#x3C;/font></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">启动完成后，在输出中可看到相应的 http端口信息。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">I1113 03:06:28.108960 4560 grpc_server.cc:2519] Started GRPCInferenceService at 0.0.0.0:9002</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">I1113 03:06:28.109231 4560 http_server.cc:4637] Started HTTPService at 0.0.0.0:9000</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">I1113 03:06:28.150615 4560 http_server.cc:320] Started Metrics Service at 0.0.0.0:8002</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">#### client 调用</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">工程中自带example，用户可以调用其中的client 进行服务测试。具体使用方法请参考 triton inference server 相关文档。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">``` shell</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">python</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> client.py</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">调用成功后会输出output信息。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 性能测试</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">可以使用NVIDIA官方工具 perf_analyzer 测试 triton-inference-server 性能。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">拉取镜像</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">export RELEASE=23.02</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">docker pull nvcr.io/nvidia/tritonserver:${RELEASE}-py3-sdk</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">docker run --rm --privileged -it --net=host nvcr.io/nvidia/tritonserver:${RELEASE}-py3-sdk</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">进入容器后，即可调用工具对模型进行测试：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">perf_analyzer -m cnclip \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">-x 1 \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">-i http \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">-u localhost:9000 \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">-b 1 \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--shape image:3,224,224 \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--concurrency-range 16</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">参数如下：   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">-m	设置模型名称，如 cnclip \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">-x	设置模型版本，根据想要测试模型的版本如实设置，如 1 \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">-i	设置通信协议，选择有 http|grpc \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">-u	设置通信地址url，如 localhost:9000 \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">-b 	设置batch size ,如果是静态shape，则不填此参数 \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--shape	指定模型输入，以输入名称区分，如 image:3,224,224 如果填写了 -b 参数，则bs维度不需要写出 \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--concurrency-range	设置并发量，可以设定为单一值，如 16；也可以通过区间加步长进行设置，如1:1:16（start:step:end）\</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">-v -v 	打开详细日志 </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">执行成功后，会打印出相应的吞吐信息。</span></span></code></pre>

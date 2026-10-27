@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {record,text,number,array,json} from './tools-data.ts';
+const root=import.meta.dirname,infra=path.resolve(root,'..');
+const report=record(json(fs.readFileSync(path.join(infra,'ge-source-notes.json'),'utf8')));
+const originals=Object.fromEntries(Object.entries(record(report.repositories)).map(([key,value])=>{const r=record(value);return [key,{url:text(r.url),commit:text(r.commit),directory:text(r.directory)}];}));
+const repos=Object.fromEntries(Object.entries(originals).map(([key,r])=>[key,{url:r.url,commit:r.commit,directory:r.directory.split('/').at(-1)!}]));
+const facts=array(report.facts).map(value=>{const f=record(value);return {id:text(f.id),claim:text(f.claim),evidence:array(f.evidence).map(value=>{const raw=record(value),e={repository:text(raw.repository),path:text(raw.path),line_start:number(raw.line_start),line_end:number(raw.line_end),url:text(raw.url)};
+ const original=originals[e.repository];if(!original)throw Error('Unknown source repository '+e.repository);const relative=e.path.slice(original.directory.length+1);
+ const lines=fs.readFileSync(path.join(infra,repos[e.repository].directory,relative),'utf8').split('\n');
+ if(e.line_start<1||e.line_end>lines.length)throw Error('Invalid source range '+e.path);
+ return {repository:e.repository,file:relative,line:e.line_start,end:e.line_end,url:e.url};
+})};});
+fs.writeFileSync(path.join(root,'data/ge-facts.json'),JSON.stringify({repositories:repos,facts}));
+console.log(JSON.stringify({facts:facts.length,evidence: facts.reduce((n,f)=>n+f.evidence.length,0)}));

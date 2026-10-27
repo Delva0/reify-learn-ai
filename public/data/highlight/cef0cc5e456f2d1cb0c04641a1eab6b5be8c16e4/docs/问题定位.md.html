@@ -1,0 +1,77 @@
+<pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># 定位思路</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">![](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">figures//process.jpg</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">若运行模型过程中遇到问题，可参考如上定位流程使用相关工具进行问题定位。下面对常见问题进行梳理。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># 常见问题：</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 精度问题</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">默认插件使用fp16进行推理，若运行服务后，推理结果精度异常，可尝试添加如下参数启动，查看精度是否有所改善：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,session.ge.exec.precision_mode_v2="origin"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">若此方法精度仍有问题，则需要逐一对比算子精度。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 模型文件未找到、查找错误</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">程序会先在模型文件夹中查找 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`.onnx`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 文件；未找到时再查找 TensorFlow 冻结图 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">`.pb`</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 文件。如果文件夹中同时包含两种格式，会优先选择 ONNX；如果同一格式有多个文件，也可能选中与预期不符的文件。请查看日志确认实际选中的模型：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">find onnx path: xxxx/xxxx/xxx.onnx</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">find tensorflow pb path: xxxx/xxxx/xxx.pb</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">以上两种日志只会出现其中一条。若都没有出现，请检查模型版本目录下是否存在受支持的文件，并核对模型仓库路径。</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 图解析问题：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">若Log中出现如下字段：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclgrphParseONNX execute failed, ret is: xxxxx</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">说明onnx解析过程中报错，需要启动plog日志，定位具体报错原因，如何使用plog请参考 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Plog使用方法</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./tools/Plog.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">常见的导致此问题的原因为未自行导出，使用官方镜像、输入输出字段不一致。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># 编译问题：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">若Log中出现如下字段：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">session_->CompileGraph failed, ret is:  xxxxx</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">说明onnx在编译过程中报错，需要启动plog日志，定位具体报错原因，如何使用plog请参考 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Plog使用方法</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./tools/Plog.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)   </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># 推理问题：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">若server启动时未见异常，程序启动成功，在使用client.py 验证推理服务时，报错，则通过以下方式定位：  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">1，client端日志具体报错原因，若为调用模型名称、版本、input、output问题，需在客户端进行修改。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">2，若调用过程中模型等配置无误，在server端出现报错</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">execute model failed, ret is: xxxxx</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">说明模型在执行推理过程中遇到问题，具体原因需打开plog进行定位</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># 定位工具</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## plog使用：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在运行之前使用环境变量，修改Plog日志等级以及打印到标准输入输出：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">export ASCEND_SLOG_PRINT_TO_STDOUT=1</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">export ASCEND_GLOBAL_LOG_LEVEL=1</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">具体功能描述请参考昇腾相关文档。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在开启plog情况下，将日志保存，搜索一个 'ERROR' 字段，查看具体报错原因。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 详细使用请参考 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Plog.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">tools/Plog.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## dump_graph:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">GE成图后会根据图中的节点进行深度优化，融合。若要查看具体融合、优化过程，可通过dump_graph 查看每一步融合过程。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在运行server 的模型脚本中，可添加如下字段进行GE图dump</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,dump_graph="1"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">相关的GE图会dump到执行目录下的 dump_graph 目录下。</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## dump_data:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在推理问题定位过程中，有时需要存储每一个节点的输入输出信息，则可以通过dump data功能将执行过程中的输入输出进行保留从而定位问题。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在运行server 的模型脚本中，可添加如下字段进行GE图dump data</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config=npu_ge,dump_data="1"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">相关的tensor会dump到执行目录下的 dump_data 目录下。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">注：dump_data 文件夹需要手工在工作目录下创建好，然后再启动服务。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## profiling:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在模型调优过程中，通常会通过profiling工具采集算子执行情况，进行进一步分析是否有优化空间。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">当前框架已集成了profiling功能，只需要通过开启开关即可profiling采集   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">当前有两类采集方法：  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">动态采集：在程序启动时不执行采集，当需要采集时，通过使用msprof发送指令给主进程启动采集。好处：可以在出现问题或者推理开始后按需进行profiling采集，防止全周期采集导致数据过大。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">普通采集：在程序启动后即开始进行采集，当主进程退出后进行数据整理打包。好处：使用简单，当可控进行推理时可以使用次方式。  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">详细使用说明请参考 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">Profiling使用方法</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./tools/Profiling.md</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span></code></pre>

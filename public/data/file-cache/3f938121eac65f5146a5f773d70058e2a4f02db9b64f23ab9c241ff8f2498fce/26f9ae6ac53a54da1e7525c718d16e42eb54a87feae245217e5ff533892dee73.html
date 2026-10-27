@@ -1,0 +1,512 @@
+<pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># 5. Context管理</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">本章节描述 CANN Runtime 的 Context 管理接口，用于 Context 的创建、销毁、切换及参数配置。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtCreateContext(aclrtContext *context, int32_t deviceId)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtCreateContext</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：在当前线程中显式创建Context。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtDestroyContext(aclrtContext context)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtDestroyContext</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：销毁Context，释放Context的资源。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtSetCurrentContext(aclrtContext context)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtSetCurrentContext</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：设置线程的Context。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtGetCurrentContext(aclrtContext *context)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtGetCurrentContext</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：获取线程的Context。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtCtxSetSysParamOpt(aclSysParamOpt opt, int64_t value)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtCtxSetSysParamOpt</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：设置当前Context中的系统参数值，多次调用本接口，以最后一次设置的值为准。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtCtxGetSysParamOpt(aclSysParamOpt opt, int64_t *value)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtCtxGetSysParamOpt</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：获取当前Context中的系统参数值。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtCtxGetCurrentDefaultStream(aclrtStream *stream)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtCtxGetCurrentDefaultStream</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：获取Context上的默认Stream。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtGetPrimaryCtxState(int32_t deviceId, uint32_t *flags, int32_t *active)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtGetPrimaryCtxState</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：获取默认Context的状态。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtCtxGetFloatOverflowAddr(void **overflowAddr)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtCtxGetFloatOverflowAddr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：饱和模式下，获取保存溢出标记的Device内存地址，该内存地址后续需作为Workspace参数传递给AI Core算子。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtCreateContext"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtCreateContext</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtCreateContext(aclrtContext *context, int32_t deviceId)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id330 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id330 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id331 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id331 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id332 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id332 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id333 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id333 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id334 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id334 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id335 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id335 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id336 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id336 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id1 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在当前线程中显式创建Context，并将当前线程与新创建的Context相关联。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">若不调用aclrtCreateContext接口显式创建Context，那系统会使用默认Context，该默认Context是在调用[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口时隐式创建的。默认Context适合简单、无复杂交互逻辑的应用，但缺点在于，在多线程编程中，执行结果取决于线程调度的顺序。显式创建的Context适合大型、复杂交互逻辑的应用，且便于提高程序的可读性、可维护性。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| context | 输出 | Context的指针。类型定义请参见[aclrtContext](25-05_Typedefs.md#aclrtContext)。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| deviceId | 输入 | 在指定的Device下创建Context。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>用户调用[aclrtGetDeviceCount](04_device_management.md#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 约束说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- 在某一进程中指定Device，该进程内的多个线程可共用在此Device上显式创建的Context。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- 若在某一进程内创建多个Context，Context的数量与Stream相关，Stream数量有限制，请参见显式创建Stream的接口。当前线程在同一时刻内只能使用其中一个Context，建议通过[aclrtSetCurrentContext](#aclrtSetCurrentContext)接口明确指定当前线程的Context，增加程序的可维护性。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- 调用本接口创建的Context中包含一个默认Stream。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    &#x3C;!-- npu="310p" id1 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Atlas推理系列产品的EP标准形态除外，其Context中包含两个Stream：一个默认Stream和一个执行内部同步的Stream。</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    &#x3C;!-- end id1 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    &#x3C;!-- npu="IPV350" id2 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    IPV350上不支持默认Context和默认Stream。</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    &#x3C;!-- end id2 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- 如果在应用程序中没有调用[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口，那么在首次调用aclrtCreateContext接口时，系统内部会根据该接口传入的Device ID，为该Device绑定一个默认Stream（一个Device仅绑定一个默认Stream），因此在首次调用aclrtCreateContext接口时，占用的Stream数量 = Device上绑定的默认Stream + Context中包含的Stream。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    &#x3C;!-- npu="IPV350" id3 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    IPV350上不支持默认Context和默认Stream。</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    &#x3C;!-- end id3 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtDestroyContext"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtDestroyContext</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtDestroyContext(aclrtContext context)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id1954 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1954 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id1955 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1955 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id1956 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1956 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id1957 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1957 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id1958 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1958 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id1959 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1959 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id1960 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1960 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id2 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">销毁Context，释放Context的资源。只能销毁通过[aclrtCreateContext](#aclrtCreateContext)接口创建的Context。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| context | 输入 | 需销毁的Context。类型定义请参见[aclrtContext](25-05_Typedefs.md#aclrtContext)。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtSetCurrentContext"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtSetCurrentContext</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtSetCurrentContext(aclrtContext context)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id785 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id785 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id786 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id786 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id787 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id787 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id788 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id788 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id789 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id789 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id790 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id790 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id791 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id791 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id3 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">设置线程的Context。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| context | 输入 | 指定线程当前的Context。类型定义请参见[aclrtContext](25-05_Typedefs.md#aclrtContext)。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 约束说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- 支持以下场景：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    - 如果在某线程（例如：thread1）中调用[aclrtCreateContext](#aclrtCreateContext)接口显式创建一个Context（例如：ctx1），则可以不调用aclrtSetCurrentContext接口指定该线程的Context，系统默认将ctx1作为thread1的Context。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    - 如果没有调用[aclrtCreateContext](#aclrtCreateContext)接口显式创建Context，则系统将默认Context作为线程的Context，此时，不能通过[aclrtDestroyContext](#aclrtDestroyContext)接口来释放默认Context。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    - 如果多次调用aclrtSetCurrentContext接口设置线程的Context，以最后一次为准。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- 若给线程设置的Context所对应的Device已经被复位，则不能将该Context设置为线程的Context，否则会导致业务异常。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- 推荐在某一线程中创建的Context，在该线程中使用。若在线程A中调用[aclrtCreateContext](#aclrtCreateContext)接口创建Context，在线程B中使用该Context，则需由用户自行保证两个线程中同一个Context下同一个Stream中任务执行的顺序。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- 调用aclrtSetCurrentContext接口通过切换Context时，如果新Context与当前Context所属的Device不同时，Device也会随之切换。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtGetCurrentContext"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtGetCurrentContext</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtGetCurrentContext(aclrtContext *context)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id2829 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2829 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id2830 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2830 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id2831 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2831 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id2832 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2832 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id2833 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2833 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id2834 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2834 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id2835 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2835 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id4 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">获取线程的Context。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">如果用户多次调用[aclrtSetCurrentContext](#aclrtSetCurrentContext)接口设置当前线程的Context，则获取的是最后一次设置的Context。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| context | 输出 | 线程当前Context的指针。类型定义请参见[aclrtContext](25-05_Typedefs.md#aclrtContext)。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtCtxSetSysParamOpt"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtCtxSetSysParamOpt</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtCtxSetSysParamOpt(aclSysParamOpt opt, int64_t value)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id3053 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id3053 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id3054 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id3054 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id3055 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id3055 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id3056 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id3056 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id3057 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id3057 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id3058 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id3058 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id3059 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id3059 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id5 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">设置当前Context中的系统参数值，多次调用本接口，以最后一次设置的值为准。调用本接口设置运行时参数值后，若需获取参数值，需调用[aclrtCtxGetSysParamOpt](#aclrtCtxGetSysParamOpt)接口。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">本接口与[aclrtSetSysParamOpt](03_runtime_configuration.md#aclrtSetSysParamOpt)接口的差别是，本接口作用域是Context，aclrtSetSysParamOpt的作用域是进程。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| opt | 输入 | 系统参数。类型定义请参见[aclSysParamOpt](25-02_Enumerations.md#aclSysParamOpt)。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| value | 输入 | 系统参数值。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtCtxGetSysParamOpt"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtCtxGetSysParamOpt</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtCtxGetSysParamOpt(aclSysParamOpt opt, int64_t *value)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id2115 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2115 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id2116 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2116 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id2117 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2117 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id2118 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2118 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id2119 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2119 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id2120 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2120 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id2121 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2121 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id6 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">获取当前Context中的系统参数值。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">系统参数无默认值，如果不调用[aclrtCtxSetSysParamOpt](#aclrtCtxSetSysParamOpt)接口设置系统参数的值，直接调用本接口获取系统参数的值，接口会返回失败。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| opt | 输入 | 系统参数。类型定义请参见[aclSysParamOpt](25-02_Enumerations.md#aclSysParamOpt)。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| value | 输出 | 存放系统参数值的内存的指针。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtCtxGetCurrentDefaultStream"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtCtxGetCurrentDefaultStream</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtCtxGetCurrentDefaultStream(aclrtStream *stream)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id1499 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1499 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id1500 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1500 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id1501 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1501 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id1502 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1502 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id1503 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1503 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id1504 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1504 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id1505 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1505 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id7 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">获取Context上的默认Stream。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| stream | 输出 | 获取到的默认Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtGetPrimaryCtxState"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtGetPrimaryCtxState</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtGetPrimaryCtxState(int32_t deviceId, uint32_t *flags, int32_t *active)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id2787 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2787 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id2788 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2788 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id2789 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2789 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id2790 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2790 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id2791 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2791 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id2792 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2792 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id2793 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2793 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id8 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">获取默认Context的状态。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| deviceId | 输入 | 获取指定Device下的默认Context。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>用户调用[aclrtGetDeviceCount](04_device_management.md#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| flags | 输出 | 预留参数。当前固定传NULL。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| active | 输出 | 存放默认Context状态的指针。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>状态值如下：&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>  - 0：未激活&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>  - 1：激活 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtCtxGetFloatOverflowAddr"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtCtxGetFloatOverflowAddr</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtCtxGetFloatOverflowAddr(void **overflowAddr)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id610 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id610 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id611 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id611 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id612 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id612 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id613 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id613 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id614 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id614 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id615 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id615 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id616 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id616 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/05_context_management_res.md#id9 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">饱和模式下，获取保存溢出标记的Device内存地址，该内存地址后续需作为Workspace参数传递给AI Core算子。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| overflowAddr | 输出 | 保存溢出标记的Device内存地址。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span></code></pre>

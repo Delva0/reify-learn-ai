@@ -7,14 +7,19 @@
     "dev": "reify dev",
     "build": "reify build",
     "preview": "reify preview",
-    "check": "reify check"
+    "check": "reify check",
+    "typecheck": "astro check && tsc --noEmit -p tsconfig.tools.json"
   },
   "dependencies": {
     "reify": "file:../reify"
   },
   "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "@types/node": "26.6.5",
+    "astro": "7.4.2",
     "parse5": "7.3.0",
-    "astro": "7.4.2"
+    "typescript": "6.0.3"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {"node": ">=24"}
 }

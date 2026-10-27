@@ -1,0 +1,159 @@
+<pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">FROM</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/ubuntu:22.04-linuxarm64</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">WORKDIR</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> /workspace</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> apt-get update \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x26;&#x26; apt install -y --no-install-recommends \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            ca-certificates \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            autoconf \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            automake \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            build-essential \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            git \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            gperf \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            libre2-dev \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            libssl-dev \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            libtool \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            libcurl4-openssl-dev \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            libb64-dev \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            libgoogle-perftools-dev \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            patchelf \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            python3-dev \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            python3-pip \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            python3-setuptools \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            rapidjson-dev \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            scons \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            software-properties-common \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            pkg-config \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            unzip \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            wget \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            zlib1g-dev \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            libarchive-dev \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            libxml2-dev \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            libnuma-dev \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            libgtest-dev \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            googletest \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            nlohmann-json3-dev</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> apt-get remove -y cmake</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">#cmake</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> wget --no-check-certificate https://github.com/Kitware/CMake/releases/download/v3.31.8/cmake-3.31.8.tar.gz &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    tar -zxf cmake-3.31.8.tar.gz &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    rm -f cmake-3.31.8.tar.gz &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    cd cmake-3.31.8 &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    ./bootstrap &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    make -j$(nproc)  &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    make install</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># anaconda</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> wget --no-check-certificate -O anaconda3.sh https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/Anaconda3-2024.10-1-Linux-aarch64.sh -U </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    bash anaconda3.sh -b -p /usr/local/anaconda3 &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    rm -f anaconda3.sh</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># python 3.10</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> export PATH=/usr/local/anaconda3/bin/:/usr/local/anaconda3/condabin:$PATH &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    conda init bash &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/ &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r/ &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2/ &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/ &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda/ &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    conda config --set show_channel_urls yes &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    conda create -y -n triton python=3.10 numpy==1.23.5 requests decorator sympy scipy attrs==21.2.0 psutil &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    echo </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"conda activate triton"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> >> ~/.bashrc &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    conda clean -ya</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># boost</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> wget --no-check-certificate https://github.com/boostorg/boost/releases/download/boost-1.81.0/boost-1.81.0.tar.gz &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    tar -zxvf boost-1.81.0.tar.gz  &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    rm -f boost-1.81.0.tar.gz &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    cd boost-1.81.0 &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    ./bootstrap.sh --with-libraries=all &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    ./b2 install -j$(nproc) &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    ldconfig</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># triton inference server</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> GIT_SSL_NO_VERIFY=1</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> cd /workspace &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    git clone https://github.com/triton-inference-server/server.git triton_server &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    cd triton_server &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    git checkout r24.02</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> cd /workspace/triton_server &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    mkdir build &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    cd build &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    export CMAKE_TLS_VERIFY=NO &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    export PATH=/usr/local/anaconda3/envs/triton/bin:$PATH &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    export LD_LIBRARY_PATH=/usr/local/anaconda3/envs/triton/lib:$LD_LIBRARY_PATH &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    CMAKE_BUILD_PARALLEL_LEVEL=8 cmake -DCMAKE_BUILD_TYPE=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Release"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> -DCMAKE_INSTALL_PREFIX:PATH=/opt/tritonserver \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        -DTRITON_THIRD_PARTY_REPO_TAG=r24.02 \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        -DTRITON_COMMON_REPO_TAG=r24.02  \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        -DTRITON_CORE_REPO_TAG=r24.02  \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        -DTRITON_BACKEND_REPO_TAG=r24.02  \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        -DTRITON_VERSION=1.0.0 \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        -DTRITON_ENABLE_METRICS_GPU=OFF \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        -DTRITON_ENABLE_GRPC=ON \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        -DTRITON_ENABLE_GPU=OFF \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        -DTRITON_ENABLE_ENSEMBLE=ON \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        -DTRITON_CORE_HEADERS_ONLY=OFF \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        .. &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    make install</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> echo </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"export LD_LIBRARY_PATH=/usr/local/anaconda3/envs/triton/lib:</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\$</span><span style="color:#032F62;--shiki-dark:#9ECBFF">LD_LIBRARY_PATH"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> >> ~/.bashrc</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># python backend 可根据需要选择</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> cd /workspace &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    git clone https://github.com/triton-inference-server/python_backend.git &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    cd python_backend &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    git checkout r24.02 &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    mkdir build &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    cd build &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    export PATH=/usr/local/anaconda3/envs/triton/bin:$PATH &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    export LD_LIBRARY_PATH=/usr/local/anaconda3/envs/triton/lib:$LD_LIBRARY_PATH &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    cmake -DTRITON_ENABLE_GPU=OFF -DTRITON_BACKEND_REPO_TAG=r24.02 -DTRITON_COMMON_REPO_TAG=r24.02 -DTRITON_CORE_REPO_TAG=r24.02 -DCMAKE_INSTALL_PREFIX:PATH=/opt/tritonserver .. &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    make install</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># 下载cann包，根据自己芯片类型以及需要的版本进行安装</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> cd /tmp &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    wget https://ascend-repo.obs.cn-east-2.myhuaweicloud.com/CANN/CANN%208.3.RC2/Ascend-cann-kernels-310p_8.3.RC2_linux-aarch64.run &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    wget https://ascend-repo.obs.cn-east-2.myhuaweicloud.com/CANN/CANN%208.3.RC2/Ascend-cann-toolkit_8.3.RC2_linux-aarch64.run &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    echo y | bash ./Ascend-cann-toolkit*.run --install --quiet --install-for-all &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    echo y | bash ./Ascend-cann-kernels*.run --install --install-for-all &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    rm -rf /tmp/*</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> . /usr/local/Ascend/ascend-toolkit/set_env.sh</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> echo </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/driver:</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\$</span><span style="color:#032F62;--shiki-dark:#9ECBFF">LD_LIBRARY_PATH"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> >> ~/.bashrc &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    echo </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"source /usr/local/Ascend/ascend-toolkit/set_env.sh"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> >> ~/.bashrc</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># onnxruntime 支持 2.1.0 版本自动获取onnx文件配置特性</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> cd /opt &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    wget --no-check-certificate https://github.com/microsoft/onnxruntime/releases/download/v1.23.2/onnxruntime-linux-aarch64-1.23.2.tgz &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    tar -zxvf onnxruntime-linux-aarch64-1.23.2.tgz  &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    mv onnxruntime-linux-aarch64-1.23.2 onnxruntime &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    rm -f onnxruntime-linux-aarch64-1.23.2.tgz &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    export LD_LIBRARY_PATH=/opt/onnxruntime/lib:$LD_LIBRARY_PATH &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    echo </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"export LD_LIBRARY_PATH=/opt/onnxruntime/lib:</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\$</span><span style="color:#032F62;--shiki-dark:#9ECBFF">LD_LIBRARY_PATH"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> >> ~/.bashrc &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    ldconfig</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">COPY</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ./include /workspace/triton_npu_ge_backend/include/</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">COPY</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ./src /workspace/triton_npu_ge_backend/src/</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">COPY</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ./build.sh /workspace/triton_npu_ge_backend/build.sh</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">COPY</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ./CMakeLists.txt /workspace/triton_npu_ge_backend/CMakeLists.txt</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># 编译 ge backend</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> export TRITON_HOME_PATH=/opt/tritonserver &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    echo </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"export TRITON_HOME_PATH=/opt/tritonserver"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> >> ~/.bashrc &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    cd /workspace/triton_npu_ge_backend &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    export CMAKE_TLS_VERIFY=NO &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    export PATH=/usr/local/anaconda3/envs/triton/bin:$PATH &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    export LD_LIBRARY_PATH=/usr/local/anaconda3/envs/triton/lib:$LD_LIBRARY_PATH &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    bash build.sh</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># 删除构建包</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">RUN</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> cd /workspace &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    rm -rf boost-1.81.0 &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    rm -rf cmake-3.31.8 &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    rm -rf python_backend &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    rm -rf triton_npu_ge_backend &#x26;&#x26; \</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    rm -rf triton_server</span></span>
+<span class="line"></span></code></pre>

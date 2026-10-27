@@ -1,0 +1,25 @@
+<pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># Plog打印</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">当模型运行出错时，如果从现有日志中无法判断具体原因，需要打开plog日志查看详细原因。</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># Plog介绍</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">日志主要用于记录系统的运行过程及异常信息，帮助用户快速定位系统运行过程中出现的问题以及开发过程中的程序调试问题。开发者可通过本节描述的环境变量，控制日志的落盘路径以及日志级别等信息。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">日志默认存储路径（$HOME/ascend/log）为了方便调试，可以将plog打印到标准输出中。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">详细说明请参[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">昇腾官方文档</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://www.hiascend.com/document/detail/zh/canncommercial/850/maintenref/envvar/envref_07_0121.html</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)。   </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># 启动方法</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">通过环境变量重定向到标准输出中，并调整日志级别：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">export ASCEND_SLOG_PRINT_TO_STDOUT=1</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">export ASCEND_GLOBAL_LOG_LEVEL=1</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在启动脚本后添加重定向 >plog.log   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">/opt/tritonserver/bin/tritonserver --model-repository {/path/to/models} >plog.log </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">``` </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">在plog.log里查找ERROR信息</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># 成功启动结果</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">打开成功后，会在输出中包含如下所示plog日志：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">![](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">../figures/Plog_1.png</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*注： Plog 日志较多，建议启动主进程时将输出重定向至文件中。*</span></span>
+<span class="line"></span></code></pre>

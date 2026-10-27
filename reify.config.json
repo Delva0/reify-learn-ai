@@ -20,7 +20,7 @@
     "Downloads": "./src/components/Downloads.astro"
   },
   "scripts": [
-    "./src/client.js"
+    "./src/client.ts"
   ],
   "mathAliases": {
     "primary": [

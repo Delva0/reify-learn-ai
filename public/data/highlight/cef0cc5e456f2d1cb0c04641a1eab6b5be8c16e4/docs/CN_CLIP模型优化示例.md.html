@@ -1,0 +1,335 @@
+<pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># CN_CLIP模型优化示例</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**CLIP**</span><span style="color:#24292E;--shiki-dark:#E1E4E8">全名</span><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**Contrastive Language-Image Pretraining**</span><span style="color:#24292E;--shiki-dark:#E1E4E8">，在2021年由OpenAI提出，其核心理念为图文对比学习预训练，是一种多模态学习模型，旨在将图像和文本进行关联，它可以快速实现图文特征相似度计算、跨模态检索、零样本图片分类等任务。Chinese-CLIP（</span><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**CN_CLIP**</span><span style="color:#24292E;--shiki-dark:#E1E4E8">）是一次极其朴素的开源，没错就是CLIP的汉化，旨在推动中文社区多模态发展，原始的CLIP模型基于英文图文语料，不能用于中文的图文表征提取场景。Chinese-CLIP以英文CLIP视觉侧参数和中文Roberta参数，作为模型初始化值。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**CN_CLIP模型的优化包括：小batch合并、动态图转静态图、多流并行+锁核、ENSEMBLE，未涉及自动融合和融合PASS。因部署采用容器化，请求bs固定为256，且每个容器对cpu有限制，所以未考虑小batch自动融合的动态图优化方案**</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 模型导出</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 修改模型文件</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">CLIP模型目录如下：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">clip</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">├── bert_tokenizer.py</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">├── configuration_bert.py</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">├── __init__.py</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">├── model_configs</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">│   ├── RBT3-chinese.json</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">│   ├── RN50.json</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">│   ├── RoBERTa-wwm-ext-base-chinese.json</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">│   ├── RoBERTa-wwm-ext-large-chinese.json</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">│   ├── ViT-B-16.json</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">│   ├── ViT-B-32.json</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">│   ├── ViT-H-14.json</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">│   ├── ViT-L-14-336.json</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">│   └── ViT-L-14.json</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">├── modeling_bert.py</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">├── model.py</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">├── utils.py</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">└── vocab.txt</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">由于最终目的是部署推理，需要"</span><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**model.py**</span><span style="color:#24292E;--shiki-dark:#E1E4E8">"中的forward返回值进行修改，具体如下：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```python</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">def</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> forward</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(self, image, text, mask_ratio</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    assert</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> image </span><span style="color:#D73A49;--shiki-dark:#F97583">is</span><span style="color:#D73A49;--shiki-dark:#F97583"> not</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> None</span><span style="color:#D73A49;--shiki-dark:#F97583"> or</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> text </span><span style="color:#D73A49;--shiki-dark:#F97583">is</span><span style="color:#D73A49;--shiki-dark:#F97583"> not</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> None</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"text and image cannot both be None!"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> image </span><span style="color:#D73A49;--shiki-dark:#F97583">is</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> None</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> self</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.encode_text(text)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    elif</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> text </span><span style="color:#D73A49;--shiki-dark:#F97583">is</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> None</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> self</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.encode_image(image)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    image_features </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> self</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.encode_image(image, mask_ratio)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    text_features </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> self</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.encode_text(text)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    image_features </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> image_features </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> image_features.norm(</span><span style="color:#E36209;--shiki-dark:#FFAB70">dim</span><span style="color:#D73A49;--shiki-dark:#F97583">=-</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#E36209;--shiki-dark:#FFAB70">keepdim</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">True</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    text_features </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> text_features </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> text_features.norm(</span><span style="color:#E36209;--shiki-dark:#FFAB70">dim</span><span style="color:#D73A49;--shiki-dark:#F97583">=-</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#E36209;--shiki-dark:#FFAB70">keepdim</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">True</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    # return image_features, text_features, self.logit_scale.exp()</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> image_features, text_features</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*注：由于self.logit_scale.exp()参数没有shape，而在triton模型仓的config.pbtxt中需要设置输出shape，会导致模型无法运行。*</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 导出模型</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">首先创建模型，需要选择model_arch（如ViT-B-16）和模型权重（checkpoint）</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```python</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># prepare the PyTorch implemented model and restore weights</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">model </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> create_model(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">_MODEL_INFO</span><span style="color:#24292E;--shiki-dark:#E1E4E8">[args.model_arch][</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'struct'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">], checkpoint).float().eval()</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">设置输入占位数据：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```python</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># prepare empty image and text as input placeholders for ONNX</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">resolution </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> _MODEL_INFO</span><span style="color:#24292E;--shiki-dark:#E1E4E8">[args.model_arch][</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'input_resolution'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">preprocess </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> image_transform(resolution)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">image </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> preprocess(Image.new(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'RGB'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, (resolution, resolution))).unsqueeze(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">text </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> clip.tokenize([</span><span style="color:#032F62;--shiki-dark:#9ECBFF">""</span><span style="color:#24292E;--shiki-dark:#E1E4E8">], </span><span style="color:#E36209;--shiki-dark:#FFAB70">context_length</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">args.context_length)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*注：resolution需根据图像分辨率进行设置，然后调用clip模型自带方法转换成相应shape的输入，此输入的内容不重要，起到占位作用即可。*</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">使用torch.onnx.export导出模型：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```python</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">torch.onnx.export(model,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    (image, text),</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    fusion_fp32_onnx_path,</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">    input_names</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'image'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'text'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">    output_names</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'unnorm_image_features'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"unnorm_text_features"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">    dynamic_axes</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">        'image'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"batch_size"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"height"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"width"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">}, </span></span>
+<span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">        'text'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"batch_size"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"seq_len"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">        'unnorm_image_features'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"batch_size"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"unnorm_feats"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">        'unnorm_text_features'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"batch_size"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"unnorm_feats"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    },</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">    export_params</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">True</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">    do_constant_folding</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">False</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">    opset_version</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">14</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">    verbose</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">True</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">其中，(image.text)构成模型输入，可以根据需求设置为(image,None)，即只导出image分支；input_names 和 output_names 用于设置模型输入输出名称；</span><span style="color:#24292E;--shiki-light-font-weight:bold;--shiki-dark:#E1E4E8;--shiki-dark-font-weight:bold">**导出静态图时应不设置dynamic_axes**</span><span style="color:#24292E;--shiki-dark:#E1E4E8">参数。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 动态图转静态图</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">首先根据模型导出章节的步骤导出ONNX模型，然后据此模型生成GE图，并采集一次Profiling数据（采集方法见Profiling文档），查看整个推理过程是否全部变为静态，模型中是否有dynamic情况，如果有，就需要具体分析是否可以消除。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">动态图执行Profiling如下：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">![](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./figures/cnclip_1.png</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">可以看到，在动态图下，有好多空泡，在1bs情况下，明显的hostbound问题。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">动态图执行Profiling如下：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">![](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./figures/cnclip_2.png</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">可以看到一次推理中，前面一部分变成了图下沉模式，而后面出现了部分图又没有下沉成功，这种情况，我们需要打开op_summary_xxx.csv 文件，查看是啥原因导致了图下沉截断。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">![](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./figures/cnclip_3.png</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">可以看到在执行Mod操作时，图从前面的static模式变成了dynamic模式，而且算子本身是一个AI_CPU类算子，初步定位为Mod导致问题，我们可以打开onnx 文件查看Mod算子作用，用Netron打开相应的onnx文件。找到这个Mod。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">![](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./figures/cnclip_4.png</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">可以看到Mod之前是一个Add计算，A是一个固定值3 ，3-1=2， 2Mod3 = 2 ，每一层均是一个固定值，那这个Mod过程其实可以把Mod这个节点给删掉，让Add的结果2，直接接入到Mod的下面两个节点。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 删除节点的代码可以通过Deepseek等AI生成，通过修改后，再次跑图，用profiling采集，所有node均变为static。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">两者吞吐对比(1 instance)：</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">1.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 动态图：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">![](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./figures/cnclip_5.png</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">2.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 静态图：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">![](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./figures/cnclip_6.png</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">可以看出，在GE静态图场景下，单Instance 都有2.6倍吞吐差异。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 模型优化</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">可参考 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">性能调优方法论</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">性能调优方法论.md#3-模型优化</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) 章节</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## 多流并行+锁核</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">由于代码框架已集成该功能，直接添加启动命令参数启动即可开启，每个Stream限制12个Cube，10个Vector：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">--backend-config</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">npu_ge,ge.</span><span style="color:#24292E;--shiki-dark:#E1E4E8">aicoreNum</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"12|10"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 具体含义请参考[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">性能调优方法论</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">性能调优方法论.md#3-多流并行锁核</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">性能优化结果如下：</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">1.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 多流并行+优化后静态</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">![](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./figures/cnclip_8.png</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">2.</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> 多流并行+优化后静态图+锁核</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">![](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./figures/cnclip_9.png</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">可以看出，在限制每条流的CV核数后，8流并行情况下整体吞吐又有35%的提升。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## ENSEMBLE</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">为方便分析，删去CLIP模型的text分支，固定batch = 1，则其image输入shape为 [</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">1,3,224,224</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 构建预处理 preprocess Python Model</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">添加模型文件和相应的config.pbtxt:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">preprocess</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0">--</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#032F62;--shiki-dark:#9ECBFF">   `</span><span style="color:#6F42C1;--shiki-dark:#B392F0">--</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> model.py</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0">--</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> config.pbtxt</span></span>
+<span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">`</span><span style="color:#6F42C1;--shiki-dark:#B392F0">--</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> preprocess-py310.tar.gz</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">config.pbtxt文件内容如下：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```json</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">name: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"preprocess"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backend: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"python"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  {</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">    name</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"image_binary"</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">    data_type:</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> TYPE_STRING</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">    dims:</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">output [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  {</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">    name</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"preprocessed_image"</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">    data_type:</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> TYPE_FP</span><span style="color:#005CC5;--shiki-dark:#79B8FF">32</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">    dims:</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">224</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">224</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">instance_group [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  {</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">    count</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#005CC5;--shiki-dark:#79B8FF">8</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">parameters: {</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">  key</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"EXECUTION_ENV_PATH"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">  value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: {</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">string_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"$$TRITON_MODEL_DIRECTORY/preprocess-py310.tar.gz"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">其中，instance_group 参数用于配置preprocess模型的实例数，实例数越多可以应对更高的并发；参数 EXECUTION_ENV_PATH 用于指定Python Model执行依赖Python虚拟环境的路径，宏“$$TRITON_MODEL_DIRECTORY”表示模型仓路径，对应于模型仓中预先放置的“preprocess-py310.tar.gz”包。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-light-font-style:italic;--shiki-dark:#E1E4E8;--shiki-dark-font-style:italic">*注：Python Model虚拟环境打包方法见附录conda-pack。*</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">模型代码为：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```python</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">import</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> numpy </span><span style="color:#D73A49;--shiki-dark:#F97583">as</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> np</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">from</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> PIL</span><span style="color:#D73A49;--shiki-dark:#F97583"> import</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Image</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">import</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> io</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">import</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> triton_python_backend_utils </span><span style="color:#D73A49;--shiki-dark:#F97583">as</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pb_utils</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> TritonPythonModel</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    def</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> initialize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(self, args):</span></span>
+<span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">        """初始化模型（加载预处理参数）"""</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        # CLIP 预训练模型的默认预处理参数（ViT-B-16 为例）</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">        self</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.input_size </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#005CC5;--shiki-dark:#79B8FF">224</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">224</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)  </span><span style="color:#6A737D;--shiki-dark:#6A737D"># 图像尺寸</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">        self</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.mean </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> np.array([</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.48145466</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.4578275</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.40821073</span><span style="color:#24292E;--shiki-dark:#E1E4E8">], </span><span style="color:#E36209;--shiki-dark:#FFAB70">dtype</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">np.float32)  </span><span style="color:#6A737D;--shiki-dark:#6A737D"># RGB 均值</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">        self</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.std </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> np.array([</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.26862954</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.26130258</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.27577711</span><span style="color:#24292E;--shiki-dark:#E1E4E8">], </span><span style="color:#E36209;--shiki-dark:#FFAB70">dtype</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">np.float32)   </span><span style="color:#6A737D;--shiki-dark:#6A737D"># RGB 标准差</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    def</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> execute</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(self, requests):</span></span>
+<span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">        """处理推理请求：PNG 解码 → 预处理 → 输出 CLIP 输入"""</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        responses </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> []</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> request </span><span style="color:#D73A49;--shiki-dark:#F97583">in</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> requests:</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            # 获取客户端输入的 PNG 字节流</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            png_input </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pb_utils.get_input_tensor_by_name(request, </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"image_binary"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            png_bytes_list </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> png_input.as_numpy()  </span><span style="color:#6A737D;--shiki-dark:#6A737D"># 形状: [batch_size]，元素为 bytes</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            # 批量处理每张图像</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            clip_inputs </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> []</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> png_bytes </span><span style="color:#D73A49;--shiki-dark:#F97583">in</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> png_bytes_list:</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                # 解码 PNG（处理可能的 Alpha 通道）</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                image </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Image.open(io.BytesIO(png_bytes)).convert(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"RGB"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)  </span><span style="color:#6A737D;--shiki-dark:#6A737D"># 转为 RGB，丢弃 Alpha</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                # 调整尺寸到 CLIP 要求的大小</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                image </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> image.resize(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">self</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.input_size, Image.</span><span style="color:#005CC5;--shiki-dark:#79B8FF">BILINEAR</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                # 转为 numpy 数组（HWC 格式）</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                image_np </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> np.array(image, </span><span style="color:#E36209;--shiki-dark:#FFAB70">dtype</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">np.float32)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                # 转为 CHW 格式（CLIP 输入为 [C, H, W]）</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                image_np </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> image_np.transpose(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)  </span><span style="color:#6A737D;--shiki-dark:#6A737D"># (H, W, 3) → (3, H, W)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                # 归一化（减去均值，除以标准差）</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                image_np </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (image_np </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 255.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> self</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.mean[:, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">None</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">None</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]) </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> self</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.std[:, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">None</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">None</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                clip_inputs.append(image_np)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            # 堆叠为批处理张量</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            clip_inputs_np </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> np.stack(clip_inputs, </span><span style="color:#E36209;--shiki-dark:#FFAB70">axis</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)  </span><span style="color:#6A737D;--shiki-dark:#6A737D"># 形状: [batch_size, 3, 224, 224]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            # 构造输出张量</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            output_tensor </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pb_utils.Tensor(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"preprocessed_image"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, clip_inputs_np)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            inference_response </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pb_utils.InferenceResponse(</span><span style="color:#E36209;--shiki-dark:#FFAB70">output_tensors</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">[output_tensor])</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            responses.append(inference_response)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> responses</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    def</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> finalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(self):</span></span>
+<span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">        """清理资源（可选）"""</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        pass</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">### 配置ENSEMBLE</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">为使能ENSEMBLE能力需要添加一个ENSEMBLE模型仓，其结构如下</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">clip_ensemble/</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0">--</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span></span>
+<span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">`</span><span style="color:#6F42C1;--shiki-dark:#B392F0">--</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> config.pbtxt</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">config文件内容为：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```json</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">name: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"clip_ensemble"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">platform: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"ensemble"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">max_batch_size: </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  {</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">    name</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"ensemble_image"</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">    data_type:</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> TYPE_STRING</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">    dims:</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">output [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  {</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">    name</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"ensemble_feats"</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">    data_type:</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> TYPE_FP</span><span style="color:#005CC5;--shiki-dark:#79B8FF">32</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">    dims:</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">512</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">ensemble_scheduling {</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">  step</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> [</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">    #</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> 步骤</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> 1：预处理</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">    {</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">      model_name</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"preprocess"</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">      model_version:</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">      input_map</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> { </span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">key</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"image_binary"</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">;</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> value:</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "ensemble_image"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">      output_map</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> { </span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">key</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"preprocessed_image"</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">;</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> value:</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "interm_image"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    },</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    # 步骤 </span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">：CN-CLIP 推理</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">      model_name</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"cn_clip"</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">      model_version:</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">      input_map</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> { </span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">key</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"image"</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">;</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> value:</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "interm_image"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }</span></span>
+<span class="line"><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">      output_map</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> { </span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">key</span><span style="color:#24292E;--shiki-dark:#E1E4E8">: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"unnorm_image_features"</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">;</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> value:</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "ensemble_feats"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">与预处理类似，我还可以在模型输出接后处理模型，将模型输出转为识别类别字符串，降低服务端传回数据量。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">CN_CLIP模型输入原始图片数据为RGB彩色图片，字节数为147KB，转为Numpy数组，字节数增加到588KB，是原来的四倍。分别测试CN_CLIP和使用的ENSEMBLE后的吞吐率：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| Model | thoughput (infer/sec) |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">|:------:|:-----:|</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| CN_CLIP | 836.831  |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| ENSEMBLE | 847.627  |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">可以看到，大约有10infer/sec的性能提升。 这是由于数据量变化不是特别大。在帮客户优化Yolo11模型时，发现在本地测试吞吐还不错，大概能到110qps，然而上到环境之后，发现无法达到理论值，仅有30qps左右，经过问题定位，发现是前处理过程中把图片通原始的jpg图片变成了[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">1,3,3600,3600</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]的Tensor，导致传输过程成为bound，原始图片一般只有500kB，而前置经过放大拉伸转为tensor后变成74MB左右。如果能把前置过程搬到服务器，通过Triton自带的Ensemble能力，通过流水线方式覆盖前处理过程，就可以在服务器上消除因前处理导致的网络传输bound。经过改造，我们将yolo11的前、后处理均通过ensemble串接为一个新的服务，这个服务只需要传原始图片，即可直接得到最终Text，改造后上线的吞吐由30qps提升至90qps，提升了200%。</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># 附录</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## MindStudio Insight 下载</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">下载链接：https://www.hiascend.com/developer/download/community/result?module=sto%2Bcann   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">![](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./figures/appendix_1.png</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">选择合适版本下载即可。详细使用方法见：https://www.hiascend.com/document/detail/zh/mindstudio/830/GUI_baseddevelopmenttool/msascendinsightug/Insight_userguide_0002.html</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## Netron 下载</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">下载链接：https://github.com/lutzroeder/netron   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">初始界面如下：  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">![](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">./figures/appendix_2.png</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">选择相应模型文件打开即可查看。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## onnxsim 安装</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">安装命令：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">pip</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> install</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> onnxsim</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">onnxsim优化命令：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">onnxsim</span><span style="color:#032F62;--shiki-dark:#9ECBFF">  {旧模型}</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> {新模型}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold">## conda-pack 安装</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">conda-pack 要打包的python版本需要与ge backend 自带的版本保持一致，当前ge backend中使用的python版本为3.10版本，建议用户制作运行环境时使用此版本python，若必须更换，请参考triton inference server官方文档制作相应的stub文件。   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">下载conda-pack：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">conda</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> install</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> conda-pack</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">打包过程：</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">我们可以从最基本的conda 虚拟环境开始，仅打包模型运行依赖的最小集，可以最大程度减少包的体积。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">conda</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> create</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> --name</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> clip_env</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> python=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">3.10</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">下载所有依赖包之前，先：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">export</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> PYTHONNOUSERSITE</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">True</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">安装完所有包后，打包环境：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```bash</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">conda</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> pack</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> -n</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> clip_env</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> -o</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> package_name.tar.gz</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">更详细的说明见[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">conda-pack文档.</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">https://conda.github.io/conda-pack/</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"></span></code></pre>

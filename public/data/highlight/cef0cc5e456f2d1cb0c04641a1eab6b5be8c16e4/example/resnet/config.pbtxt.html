@@ -1,0 +1,63 @@
+<pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">name: "resnet"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">backend: "npu_ge"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">max_batch_size: 64</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># input output 可以不填，由程序自行解析</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">input [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    name: "data"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    dims: [3, 224, 224 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">output [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    name: "resnetv24_dense0_fwd"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    data_type: TYPE_FP32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    dims: [1000 ]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">#初始测试建议1，后续性能调优可以参考相关文档调整</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">instance_group [{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  count: 1</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">#动态batch合并，静态图场景下需删除</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># dynamic_batching { </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">#   max_queue_delay_microseconds: 1000  # 等待合并的最大延迟（微秒），可调整</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">#   preferred_batch_size: [2, 4, 8]    # 优先合并成这些batch_size（可选）</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># 选择运行在哪些卡上</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">parameters: [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  key: "device_ids",</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  value: {string_value: "4,5"}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># 静态图开关，仅在所有shape均为固定值时生效</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># parameters: [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">#   key: "static_model",</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">#   value: {string_value: "1"} # GE静态图开关，此配置与 dynamic_batching 互斥</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># ]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># Profiling 开关</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># parameters: [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">#   key: "profiling",</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">#   value: {string_value: "dynamic"} # 打开动态profiling</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># ]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># 锁核设置</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># parameters: [</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">#   key: "ge.aicoreNum",</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">#   value: {string_value: "12|10"} # 锁核，每个Stream使用cube12个，vector10个</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"># ]</span></span></code></pre>

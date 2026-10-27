@@ -1,0 +1,568 @@
+<pre class="shiki shiki-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#79B8FF;--shiki-dark-font-weight:bold"># 11-02 主机内存管理</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">本章节描述主机（Host）内存的分配、释放、注册及指针获取接口。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtMallocHost(void **hostPtr, size_t size)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtMallocHost</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：申请Host内存（该内存是锁页内存），由系统保证内存首地址64字节对齐。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtMallocHostWithCfg(void **ptr, uint64_t size, aclrtMallocConfig *cfg)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtMallocHostWithCfg</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：申请Host内存（该内存是锁页内存），由系统保证内存首地址64字节对齐。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtFreeHost(void *hostPtr)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtFreeHost</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：释放通过[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">aclrtMallocHost</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtMallocHost</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)接口或[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">aclrtMallocHostWithCfg</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtMallocHostWithCfg</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)接口申请的Host内存。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtFreeHostWithDevSync(void *hostPtr)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtFreeHostWithDevSync</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：释放通过[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">aclrtMallocHost</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtMallocHost</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)接口或[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">aclrtMallocHostWithCfg</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtMallocHostWithCfg</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)接口申请的Host内存。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtHostRegister(void *ptr, uint64_t size, aclrtHostRegisterType type, void **devPtr)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtHostRegister</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：将Host内存映射注册为Device可访问的内存地址，并获取映射后的Device内存地址。映射后的Device内存地址不能用于内存操作，例如内存复制。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtHostRegisterV2(void *ptr, uint64_t size, uint32_t flag)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtHostRegisterV2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：注册Host内存地址。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtHostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtHostGetDevicePointer</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：获取由aclrtHostRegister或aclrtHostRegisterV2接口注册映射的Device内存地址。映射后的Device内存地址不能用于内存操作，例如内存复制。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtHostGetDevicePointerAddrRange(aclrtAddrRange *addrRange, uint32_t *count)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtHostGetDevicePointerAddrRange</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：获取Host内存映射成的Device内存地址的地址范围。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtHostMemMapCapabilities(uint32_t deviceId, aclrtHacType hacType, aclrtHostMemMapCapability *capabilities)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtHostMemMapCapabilities</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：查询指定的硬件驱动加速器是否支持访问通过[</span><span style="color:#032F62;--shiki-light-text-decoration:underline;--shiki-dark:#DBEDFF;--shiki-dark-text-decoration:underline">aclrtHostRegister</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtHostRegister</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)接口注册的内存。</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-light-text-decoration:underline;--shiki-dark:#79B8FF;--shiki-dark-text-decoration:underline">`aclError aclrtHostUnregister(void *ptr)`</span><span style="color:#24292E;--shiki-dark:#E1E4E8">](</span><span style="color:#24292E;--shiki-light-text-decoration:underline;--shiki-dark:#E1E4E8;--shiki-dark-text-decoration:underline">#aclrtHostUnregister</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)：取消注册Host内存。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtMallocHost"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtMallocHost</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtMallocHost(void **hostPtr, size_t size)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id1681 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1681 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id1682 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1682 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id1683 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1683 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id1684 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1684 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id1685 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1685 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id1686 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1686 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id1687 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1687 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id1 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">申请Host内存（该内存是锁页内存），由系统保证内存首地址64字节对齐。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">通过本接口申请的内存，需要通过[aclrtFreeHost](#aclrtFreeHost)接口或[aclrtFreeHostWithDevSync](#aclrtFreeHostWithDevSync)接口释放内存。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| hostPtr | 输出 | “已分配内存的指针”的指针。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| size | 输入 | 申请内存的大小，单位Byte。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>size不能为0。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 约束说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- 本接口分配的内存不会对内容进行初始化，建议在使用内存前先调用[aclrtMemset](11-03_memory_copy_and_set.md#aclrtMemset)接口先初始化内存，清除内存中的随机数。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- 本接口内部不会进行隐式的device同步或流同步。如果申请内存成功或申请内存失败会立刻返回结果。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- 使用aclrtMallocHost接口分配过多的锁页内存，将导致操作系统用于分页的物理内存变少，从而降低系统整体的性能。</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- 频繁调用aclrtMallocHost接口申请内存、调用[aclrtFreeHost](#aclrtFreeHost)接口释放内存，会损耗性能，建议用户提前做内存预先分配或二次管理，避免频繁申请/释放内存。</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p,310b" id8 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- 针对Ascend RC形态、Control CPU开放形态，Host与Device是合一的，所以申请Host内存也等同于申请Device内存。此外，申请内存时，按普通页申请。如果需要64字节对齐的首地址，用户需自行处理对齐问题。</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id8 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p,310b" id9 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- 针对Ascend RC形态、Control CPU开放形态，若用户使用本接口申请大块内存并自行划分、管理内存时，每段内存需同时满足以下需求，其中，len表示某段内存的大小，ALIGN\_UP\[len,k\]表示向上按k字节对齐：\(\(len-1\)/k+1\)\*k：</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    - 内存大小向上对齐成32整数倍+32字节（m=ALIGN\_UP\[len,32\]+32字节）；</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    - 内存起始地址需满足64字节对齐（ALIGN\_UP\[m,64\]）。</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id9 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtMallocHostWithCfg"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtMallocHostWithCfg</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtMallocHostWithCfg(void **ptr, uint64_t size, aclrtMallocConfig *cfg)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id715 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id715 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id716 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id716 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id717 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id717 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id718 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id718 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id719 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id719 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id720 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id720 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id721 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id721 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id2 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">申请Host内存（该内存是锁页内存），由系统保证内存首地址64字节对齐。与aclrtMallocHost接口相比，本接口在申请内存时，还可以指定内存相关的配置信息。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">通过本接口申请的内存，需要通过[aclrtFreeHost](#aclrtFreeHost)接口或[aclrtFreeHostWithDevSync](#aclrtFreeHostWithDevSync)接口释放内存。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p,310b" id10 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">针对Ascend RC形态、Control CPU开放形态，Host与Device是合一的，所以申请Host内存也等同于申请Device内存。此外，申请内存时，按普通页申请。如果需要64字节对齐的首地址，用户需自行处理对齐问题。</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id10 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| ptr | 输出 | “已分配内存的指针”的指针。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| size | 输入 | 申请内存的大小，单位Byte。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>size不能为0。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| cfg | 输入 | 内存配置信息。类型定义请参见[aclrtMallocConfig](25-04_Structs.md#aclrtMallocConfig)。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>不指定配置时，此处可传NULL。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtFreeHost"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtFreeHost</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtFreeHost(void *hostPtr)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id540 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id540 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id541 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id541 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id542 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id542 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id543 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id543 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id544 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id544 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id545 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id545 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id546 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id546 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id3 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">释放通过[aclrtMallocHost](#aclrtMallocHost)接口或[aclrtMallocHostWithCfg](#aclrtMallocHostWithCfg)接口申请的Host内存。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">本接口会立刻释放传入的内存，接口内部不会进行隐式的Device同步或流同步、也不会等待使用该内存的任务完成。用户需确保在调用本接口后不再访问该内存指针。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| hostPtr | 输入 | 待释放内存的指针。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtFreeHostWithDevSync"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtFreeHostWithDevSync</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtFreeHostWithDevSync(void *hostPtr)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id778 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id778 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id779 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id779 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id780 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id780 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id781 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id781 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id782 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id782 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id783 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id783 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id784 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id784 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id4 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">释放通过[aclrtMallocHost](#aclrtMallocHost)接口或[aclrtMallocHostWithCfg](#aclrtMallocHostWithCfg)接口申请的Host内存。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">本接口内部会执行隐式Device同步，并等待使用该内存的任务完成。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| hostPtr | 输入 | 待释放内存的指针。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtHostRegister"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtHostRegister</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtHostRegister(void *ptr, uint64_t size, aclrtHostRegisterType type, void **devPtr)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id1576 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1576 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id1577 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1577 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id1578 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1578 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id1579 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1579 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id1580 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1580 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id1581 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1581 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id1582 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1582 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id5 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">将Host内存映射注册为Device可访问的内存地址，并获取映射后的Device内存地址，该地址仅支持在Device上访问，例如作为核函数的参数，供Device的AI Core访问。若涉及Host侧的内存处理，需使用原始Host内存地址。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">取消注册Host内存需调用[aclrtHostUnregister](#aclrtHostUnregister)接口。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| ptr | 输入 | Host内存地址。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>支持直接传入通过aclrtMallocHost或aclrtMallocHostWithCfg接口申请的Host内存地址，也支持对该Host内存地址进行地址偏移后传入，但偏移后的内存地址需要满足4KB页对齐要求。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>当os内核版本为5.10或更低时，使用非锁页内存会导致异常，因此必须调用aclrtMallocHost或aclrtMallocHostWithCfg接口来申请Host锁页内存。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>当os内核版本为5.10以上时，支持使用非锁页的Host内存，因此既支持调用aclrtMallocHost或aclrtMallocHostWithCfg接口申请Host锁页内存，也支持使用malloc接口申请Host非锁页内存。使用malloc接口申请的Host内存无需4KB页对齐。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| size | 输入 | 内存大小，单位Byte。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| type | 输入 | 内存注册类型。类型定义请参见[aclrtHostRegisterType](25-02_Enumerations.md#aclrtHostRegisterType)。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| devPtr | 输出 | Host内存映射成的Device可访问的内存地址。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtHostRegisterV2"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtHostRegisterV2</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtHostRegisterV2(void *ptr, uint64_t size, uint32_t flag)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id1401 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1401 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id1402 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1402 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id1403 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1403 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id1404 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1404 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id1405 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1405 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id1406 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1406 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id1407 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1407 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id6 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">注册Host内存地址。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">取消注册需调用[aclrtHostUnregister](#aclrtHostUnregister)接口。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| ptr | 输入 | Host内存地址。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>支持直接传入通过aclrtMallocHost或aclrtMallocHostWithCfg接口申请的Host内存地址，也支持对该Host内存地址进行地址偏移后传入，但偏移后的内存地址需要满足4KB页对齐要求。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>当os内核版本为5.10或更低时，使用非锁页内存会导致异常，因此必须调用aclrtMallocHost或aclrtMallocHostWithCfg接口来申请Host锁页内存。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>当os内核版本为5.10以上时，支持使用非锁页的Host内存，因此既支持调用aclrtMallocHost或aclrtMallocHostWithCfg接口申请Host锁页内存，也支持使用malloc接口申请Host非锁页内存。使用malloc接口申请的Host内存无需4KB页对齐。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| size | 输入 | 内存大小，单位Byte。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| flag | 输入 | 内存注册类型。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>取值为如下宏，支持配置单个宏，也支持配置多个宏位或（例如ACL_HOST_REG_MAPPED \| ACL_HOST_REG_PINNED）：&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>  - ACL_HOST_REG_MAPPED：将Host内存映射注册为Device可访问的内存地址，再配合调用[aclrtHostGetDevicePointer](#aclrtHostGetDevicePointer)接口获取映射后的Device内存地址。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>  - ACL_HOST_REG_IOMEMORY：将Host上第三方PCIe设备的IO space(寄存器、缓存)映射注册为Device可访问，包括读写。使用该宏时不支持锁页内存，因此该宏不能与ACL_HOST_REG_PINNED组合使用。预留选项，当前不支持。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>  - ACL_HOST_REG_READONLY：Host内存映射注册为Device只读。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>  - ACL_HOST_REG_PINNED：将Host非锁页内存注册为锁页内存。Host非锁页内存可通过C/C++标准库函数（如malloc、calloc、new）或默认的mmap系统调用等方式申请。该宏仅适用于Host非锁页内存；若传入Host锁页内存，接口将返回错误。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>宏定义如下：&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>#define ACL_HOST_REG_MAPPED 0x2UL&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>#define ACL_HOST_REG_IOMEMORY 0x4UL&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>#define ACL_HOST_REG_READONLY 0x8UL&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>#define ACL_HOST_REG_PINNED 0x10000000UL |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtHostGetDevicePointer"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtHostGetDevicePointer</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtHostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id1 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id2 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id2 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id3 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id3 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id4 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id4 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id5 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id5 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id6 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id6 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id7 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id7 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id7 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">获取由aclrtHostRegister或aclrtHostRegisterV2接口注册映射的Device内存地址。映射后的Device内存地址不能用于内存操作，例如内存复制。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| pHost | 输入 | 通过aclrtHostRegister或aclrtHostRegisterV2接口注册映射的Host内存地址。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| pDevice | 输出 | Host内存映射成的Device内存地址。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| flag | 输入 | 预留参数，当前固定配置为0。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtHostMemMapCapabilities"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtHostMemMapCapabilities</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtHostMemMapCapabilities(uint32_t deviceId, aclrtHacType hacType, aclrtHostMemMapCapability *capabilities)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id561 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id561 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id562 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id562 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id563 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id563 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id564 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id564 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id565 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id565 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id566 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id566 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id567 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id567 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id8 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">查询指定的硬件驱动加速器是否支持访问通过[aclrtHostRegister](#aclrtHostRegister)接口注册的内存。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| deviceId | 输入 | Device ID。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>用户调用[aclrtGetDeviceCount](04_device_management.md#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| hacType | 输入 | HAC（Hardware Accelerator Controller，硬件加速控制器）类型。类型定义请参见[aclrtHacType](25-02_Enumerations.md#aclrtHacType)。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| capabilities | 输出 | 是否支持访问通过aclrtHostRegister接口注册的内存。类型定义请参见[aclrtHostMemMapCapability](25-02_Enumerations.md#aclrtHostMemMapCapability)。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtHostUnregister"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtHostUnregister</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtHostUnregister(void *ptr)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id1898 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR&#x26;950DT系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1898 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id1899 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1899 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id1900 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1900 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id1901 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1901 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id1902 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1902 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id1903 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1903 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id1904 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id1904 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id9 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">取消注册Host内存。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">本接口与[aclrtHostRegister](#aclrtHostRegister)或[aclrtHostRegisterV2](#aclrtHostRegisterV2)接口成对使用。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| ptr | 输入 | Host侧内存地址。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"aclrtHostGetDevicePointerAddrRange"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">## aclrtHostGetDevicePointerAddrRange</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```c</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">aclError aclrtHostGetDevicePointerAddrRange(aclrtAddrRange *addrRange, uint32_t *count)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">```</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 产品支持情况</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="950" id974 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950PR系列产品：支持</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Ascend 950DT系列产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id974 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="A3" id975 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A3系列产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id975 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910b" id976 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas A2系列产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id976 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310b" id977 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas 200I/500 A2推理产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id977 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="310p" id978 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas推理系列产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id978 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="910" id979 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- Atlas训练系列产品：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id979 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- npu="IPV350" id980 --></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">- IPV350：不支持</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- end id980 --></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">&#x3C;!-- @ref: runtime/res/docs/zh/api_ref/11-02_host_memory_management_res.md#id10 --></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 功能说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">获取Host内存映射成的Device内存地址的地址范围。</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 参数说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| 参数名 | 输入/输出 | 说明 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| --- | :---: | --- |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| addrRange | 输出 | 地址范围数组，由调用方分配内存。&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">br</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>类型定义请参见[aclrtAddrRange](25-04_Structs.md#aclrtAddrRange)。 |</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">| count | 输入/输出 | addrRange非空时作为输入，表示addrRange数组的长度; addrRange为空时作为输出，表示实际返回的数组长度。 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">### 返回值说明</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。</span></span>
+<span class="line"></span></code></pre>
